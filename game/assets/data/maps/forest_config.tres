@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="MapConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/map/map_config.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+map_id = "forest"
+map_name = "幽暗森林"
+description = "一片神秘的森林，藤蔓陷阱和毒雾遍布其中"
+map_size = Vector2i(100, 100)
+tile_size = 64
+has_vine_traps = true
+has_poison_mist = true
+has_lava_damage = false
+has_ice_physics = false
+has_vision_limit = false
+has_teleporters = false
+ambient_color = Color(0.8, 0.9, 0.7, 1)
+fog_density = 0.3
+music_track = "forest_theme"
+enemy_types = ["shadow_servant", "swarm", "skeleton_mage"]
+spawn_rate = 1.0
+max_enemies = 50
+unlock_condition = ""
+required_wave = 0
+required_map = ""

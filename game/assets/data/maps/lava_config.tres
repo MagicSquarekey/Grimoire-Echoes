@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="MapConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/map/map_config.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+map_id = "lava"
+map_name = "熔岩裂谷"
+description = "火山地带，岩浆河流和间歇泉构成危险环境"
+map_size = Vector2i(100, 100)
+tile_size = 64
+has_vine_traps = false
+has_poison_mist = false
+has_lava_damage = true
+has_ice_physics = false
+has_vision_limit = false
+has_teleporters = false
+ambient_color = Color(1.0, 0.7, 0.5, 1)
+fog_density = 0.0
+music_track = "lava_theme"
+enemy_types = ["shadow_servant", "skeleton_warrior", "stone_gargoyle"]
+spawn_rate = 1.2
+max_enemies = 60
+unlock_condition = "通关M1"
+required_wave = 0
+required_map = "forest"

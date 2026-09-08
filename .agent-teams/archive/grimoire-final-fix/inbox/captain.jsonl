@@ -1,0 +1,1 @@
+{"id":"32eaccf3-7b5f-4faf-8f72-27e38e48d551","from":"tester","to":"captain","content":"tester 已就位，看到我的任务 t2（全面测试游戏全流程）依赖 bug-fixer 的 t1（修复所有运行时Bug）。等待 bug-fixer 完成后自动开始测试工作。","ts":1788416148550,"deliveredAt":1788416148553,"readAt":1788416148553}

@@ -1,0 +1,66 @@
+[gd_scene load_steps=6 format=3 uid="uid://player001"]
+
+[ext_resource type="Script" path="res://scripts/player/player.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/player/player_stats.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/player/spell_caster.gd" id="4"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_1"]
+radius = 18.0
+
+[node name="Player" type="CharacterBody2D"]
+script = ExtResource("1")
+collision_layer = 1
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_1")
+
+[node name="Glow" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-22, -22, 22, -22, 22, 22, -22, 22)
+color = Color(0.4, 0.7, 1, 0.15)
+
+[node name="Body" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+color = Color(0.2, 0.6, 1, 1)
+
+[node name="BodyHighlight" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-12, -16, 4, -16, 0, -8, -16, -8)
+color = Color(0.4, 0.8, 1, 0.5)
+
+[node name="Eye1" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-8, -8, -2, -8, -2, -2, -8, -2)
+color = Color(1, 1, 1, 1)
+
+[node name="Eye1Pupil" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-6, -6, -4, -6, -4, -4, -6, -4)
+color = Color(0.1, 0.1, 0.2, 1)
+
+[node name="Eye2" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(2, -8, 8, -8, 8, -2, 2, -2)
+color = Color(1, 1, 1, 1)
+
+[node name="Eye2Pupil" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(4, -6, 6, -6, 6, -4, 4, -4)
+color = Color(0.1, 0.1, 0.2, 1)
+
+[node name="Mouth" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-4, 2, 4, 2, 2, 6, -2, 6)
+color = Color(0.15, 0.4, 0.8, 1)
+
+[node name="Robe" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-18, 8, 18, 8, 14, 20, -14, 20)
+color = Color(0.15, 0.35, 0.7, 1)
+
+[node name="PlayerStats" type="Node2D" parent="."]
+script = ExtResource("2")
+
+[node name="PlayerController" type="Node2D" parent="."]
+script = ExtResource("3")
+player_body = NodePath("..")
+
+[node name="SpellCaster" type="Node2D" parent="."]
+script = ExtResource("4")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+zoom = Vector2(1.5, 1.5)

@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="MapConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/map/map_config.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+map_id = "shadow_realm"
+map_name = "暗影深渊"
+description = "地下迷宫，视野受限，传送门连接各个区域"
+map_size = Vector2i(100, 100)
+tile_size = 64
+has_vine_traps = false
+has_poison_mist = false
+has_lava_damage = false
+has_ice_physics = false
+has_vision_limit = true
+has_teleporters = true
+ambient_color = Color(0.3, 0.2, 0.4, 1)
+fog_density = 0.8
+music_track = "shadow_theme"
+enemy_types = ["shadow_servant", "shadow_knight", "shadow_mage"]
+spawn_rate = 1.5
+max_enemies = 45
+unlock_condition = "通关M3"
+required_wave = 0
+required_map = "ice"

@@ -1,0 +1,60 @@
+[gd_scene load_steps=13 format=3 uid="uid://game_scene"]
+
+[ext_resource type="Script" path="res://scripts/systems/game_controller.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/systems/combat_manager.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/systems/experience_system.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/systems/status_effect_system.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_spawner.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/spells/fusion_system.gd" id="6"]
+[ext_resource type="Script" path="res://scripts/map/game_background.gd" id="7"]
+[ext_resource type="PackedScene" uid="uid://player_scene" path="res://scenes/player/player.tscn" id="8"]
+[ext_resource type="PackedScene" uid="uid://hud_scene" path="res://scenes/ui/hud.tscn" id="9"]
+[ext_resource type="PackedScene" uid="uid://upgrade_panel_scene" path="res://scenes/ui/upgrade_panel.tscn" id="10"]
+[ext_resource type="PackedScene" uid="uid://pause_menu_scene" path="res://scenes/ui/pause_menu.tscn" id="11"]
+[ext_resource type="PackedScene" uid="uid://game_over_screen" path="res://scenes/ui/game_over_screen.tscn" id="12"]
+
+[node name="Game" type="Node2D"]
+
+[node name="Background" type="Node2D" parent="."]
+script = ExtResource("7")
+
+[node name="GameController" type="Node" parent="."]
+script = ExtResource("1")
+
+[node name="CombatManager" type="Node" parent="GameController"]
+script = ExtResource("2")
+
+[node name="ExperienceSystem" type="Node" parent="GameController"]
+script = ExtResource("3")
+
+[node name="StatusEffectSystem" type="Node" parent="GameController"]
+script = ExtResource("4")
+
+[node name="FusionSystem" type="Node" parent="GameController"]
+script = ExtResource("6")
+
+[node name="EnemySpawner" type="Node" parent="GameController"]
+script = ExtResource("5")
+
+[node name="Player" parent="." instance=ExtResource("8")]
+position = Vector2(960, 540)
+
+[node name="Entities" type="Node2D" parent="."]
+
+[node name="Enemies" type="Node2D" parent="Entities"]
+
+[node name="Projectiles" type="Node2D" parent="Entities"]
+
+[node name="Pickups" type="Node2D" parent="Entities"]
+
+[node name="Effects" type="Node2D" parent="."]
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="HUD" parent="UI" instance=ExtResource("9")]
+
+[node name="UpgradePanel" parent="UI" instance=ExtResource("10")]
+
+[node name="PauseMenu" parent="UI" instance=ExtResource("11")]
+
+[node name="GameOverScreen" parent="UI" instance=ExtResource("12")]

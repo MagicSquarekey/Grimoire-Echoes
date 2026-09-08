@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="MapConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/map/map_config.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+map_id = "altar"
+map_name = "元素祭坛"
+description = "神秘的祭坛，元素区域提供加成，元素风暴随机席卷"
+map_size = Vector2i(100, 100)
+tile_size = 64
+has_vine_traps = false
+has_poison_mist = false
+has_lava_damage = false
+has_ice_physics = false
+has_vision_limit = false
+has_teleporters = false
+ambient_color = Color(0.9, 0.8, 1.0, 1)
+fog_density = 0.0
+music_track = "altar_theme"
+enemy_types = ["shadow_servant", "elemental_lord", "boss_elemental_king"]
+spawn_rate = 1.8
+max_enemies = 70
+unlock_condition = "通关M4"
+required_wave = 0
+required_map = "shadow_realm"
