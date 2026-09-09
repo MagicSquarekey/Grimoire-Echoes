@@ -86,7 +86,9 @@ func _die() -> void:
 	
 	_on_death_animation()
 	enemy_died.emit(self)
-	_drop_rewards()
+	# 掉落物含 Area2D；_die 常由物理回调(弹体body_entered)触发，
+	# 在物理flush期间直接add_child会报 "Can't change this state while flushing queries"，改为延迟执行
+	_drop_rewards.call_deferred()
 	
 	await get_tree().create_timer(0.5).timeout
 	if is_instance_valid(self):

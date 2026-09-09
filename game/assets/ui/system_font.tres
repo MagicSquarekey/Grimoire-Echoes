@@ -1,0 +1,8 @@
+[gd_resource type="SystemFont" load_steps=2 format=3]
+
+[sub_resource type="SystemFont" id="SystemFont_emoji"]
+font_names = PackedStringArray("Segoe UI Emoji")
+
+[resource]
+font_names = PackedStringArray("Microsoft YaHei", "微软雅黑")
+fallbacks = Array[Font]([SubResource("SystemFont_emoji")])

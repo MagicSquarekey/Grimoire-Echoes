@@ -61,7 +61,7 @@ func _process_field_damage() -> void:
 		await get_tree().create_timer(hit_interval).timeout
 		
 		# 获取范围内的敌人
-		var enemies = _get_enemies_in_range(field_radius)
+		var enemies = _get_enemies_in_circle(field_radius)
 		
 		for enemy in enemies:
 			# 应用伤害
@@ -80,7 +80,7 @@ func _process_field_damage() -> void:
 				_create_stun_visual(enemy.global_position)
 
 ## 获取范围内敌人
-func _get_enemies_in_range(range: float) -> Array[Node2D]:
+func _get_enemies_in_circle(range: float) -> Array[Node2D]:
 	var enemies: Array[Node2D] = []
 	var space_state = get_world_2d().direct_space_state
 	

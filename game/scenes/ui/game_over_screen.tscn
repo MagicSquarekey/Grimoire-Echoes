@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://game_over_screen"]
+[gd_scene load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/game_over_screen.gd" id="1"]
 
@@ -11,47 +11,73 @@ script = ExtResource("1")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0.2, 0, 0, 0.85)
+color = Color(0.07, 0.015, 0.05, 0.92)
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 theme_override_constants/margin_left = 100
-theme_override_constants/margin_top = 100
+theme_override_constants/margin_top = 90
 theme_override_constants/margin_right = 100
-theme_override_constants/margin_bottom = 100
+theme_override_constants/margin_bottom = 90
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
 size_flags_horizontal = 1
 size_flags_vertical = 1
 alignment = 1
-theme_override_constants/separation = 20
+theme_override_constants/separation = 14
 
 [node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-text = "游戏结束"
+theme_type_variation = &"TitleLabel"
+theme_override_colors/font_color = Color(0.94, 0.42, 0.4, 1)
+theme_override_font_sizes/font_size = 54
+text = "回响消散…"
 horizontal_alignment = 1
 
-[node name="StatsLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="SubtitleLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
+theme_type_variation = &"HintLabel"
+text = "—— 但秘法之书永不会合上 ——"
+horizontal_alignment = 1
+
+[node name="StatsPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+custom_minimum_size = Vector2(420, 0)
+
+[node name="StatsMargin" type="MarginContainer" parent="MarginContainer/VBoxContainer/StatsPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 30
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 30
+theme_override_constants/margin_bottom = 18
+
+[node name="StatsLabel" type="Label" parent="MarginContainer/VBoxContainer/StatsPanel/StatsMargin"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 21
 text = "波次: 0
 击杀: 0
 时间: 00:00:00"
 horizontal_alignment = 1
 
+[node name="Spacer" type="Control" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 8)
+
 [node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 alignment = 1
-theme_override_constants/separation = 20
+theme_override_constants/separation = 24
 
 [node name="RespawnButton" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
-custom_minimum_size = Vector2(150, 50)
-text = "重新开始"
+custom_minimum_size = Vector2(200, 56)
+text = "再度唤醒"
 
 [node name="MenuButton" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
-custom_minimum_size = Vector2(150, 50)
+custom_minimum_size = Vector2(200, 56)
 text = "返回主菜单"

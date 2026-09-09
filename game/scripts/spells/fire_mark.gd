@@ -103,7 +103,7 @@ func _schedule_explosion(enemy: Node2D) -> void:
 ## 执行引爆
 func _explode(enemy: Node2D) -> void:
 	# 获取爆炸范围内的敌人
-	var enemies = _get_enemies_in_range(explosion_radius, enemy.global_position)
+	var enemies = _get_enemies_in_circle(explosion_radius, enemy.global_position)
 	
 	for target in enemies:
 		# 应用引爆伤害
@@ -122,7 +122,7 @@ func _explode(enemy: Node2D) -> void:
 	_create_explosion_visual(enemy.global_position)
 
 ## 获取范围内敌人
-func _get_enemies_in_range(range: float, center: Vector2) -> Array[Node2D]:
+func _get_enemies_in_circle(range: float, center: Vector2) -> Array[Node2D]:
 	var enemies: Array[Node2D] = []
 	var space_state = get_world_2d().direct_space_state
 	

@@ -1,6 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://enemybase001"]
+[gd_scene load_steps=10 format=3 uid="uid://enemybase001"]
 
 [ext_resource type="Script" path="res://scripts/enemies/enemy_base.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/visual/sprite_body.gd" id="2"]
+[ext_resource type="SpriteFrames" path="res://assets/sprites/gen/enemy_shadow_servant.tres" id="3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/gen/shadow_blob.png" id="4"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1"]
 radius = 16.0
@@ -22,9 +25,20 @@ collision_mask = 5
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_1")
 
-[node name="Body" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
-color = Color(0.6, 0.6, 0.6, 1)
+[node name="Shadow" type="Sprite2D" parent="."]
+modulate = Color(1, 1, 1, 0.8)
+position = Vector2(0, 12)
+scale = Vector2(0.3, 0.16)
+texture = ExtResource("4")
+
+[node name="Body" type="AnimatedSprite2D" parent="."]
+script = ExtResource("2")
+texture_filter = 1
+position = Vector2(0, -9)
+scale = Vector2(0.16, 0.16)
+sprite_frames = ExtResource("3")
+animation = &"idle"
+autoplay = "idle"
 
 [node name="Hitbox" type="Area2D" parent="."]
 collision_layer = 2

@@ -1,9 +1,12 @@
-[gd_scene load_steps=6 format=3 uid="uid://player001"]
+[gd_scene load_steps=9 format=3 uid="uid://player001"]
 
 [ext_resource type="Script" path="res://scripts/player/player.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/player/player_stats.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/player/spell_caster.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/visual/sprite_body.gd" id="5"]
+[ext_resource type="SpriteFrames" path="res://assets/sprites/gen/player_water.tres" id="6"]
+[ext_resource type="Texture2D" path="res://assets/sprites/gen/shadow_blob.png" id="7"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1"]
 radius = 18.0
@@ -17,40 +20,24 @@ collision_mask = 2
 shape = SubResource("CircleShape2D_1")
 
 [node name="Glow" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(-22, -22, 22, -22, 22, 22, -22, 22)
+polygon = PackedVector2Array(24, 0, 22.2, 9.4, 16.4, 16.4, 9.4, 22.2, 0, 24, -9.4, 22.2, -16.4, 16.4, -22.2, 9.4, -24, 0, -22.2, -9.4, -16.4, -16.4, -9.4, -22.2, 0, -24, 9.4, -22.2, 16.4, -16.4, 22.2, -9.4)
 color = Color(0.4, 0.7, 1, 0.15)
 
-[node name="Body" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
-color = Color(0.2, 0.6, 1, 1)
+[node name="Shadow" type="Sprite2D" parent="."]
+modulate = Color(1, 1, 1, 0.85)
+position = Vector2(0, 14)
+scale = Vector2(0.34, 0.18)
+texture = ExtResource("7")
 
-[node name="BodyHighlight" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(-12, -16, 4, -16, 0, -8, -16, -8)
-color = Color(0.4, 0.8, 1, 0.5)
-
-[node name="Eye1" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(-8, -8, -2, -8, -2, -2, -8, -2)
-color = Color(1, 1, 1, 1)
-
-[node name="Eye1Pupil" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(-6, -6, -4, -6, -4, -4, -6, -4)
-color = Color(0.1, 0.1, 0.2, 1)
-
-[node name="Eye2" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(2, -8, 8, -8, 8, -2, 2, -2)
-color = Color(1, 1, 1, 1)
-
-[node name="Eye2Pupil" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(4, -6, 6, -6, 6, -4, 4, -4)
-color = Color(0.1, 0.1, 0.2, 1)
-
-[node name="Mouth" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(-4, 2, 4, 2, 2, 6, -2, 6)
-color = Color(0.15, 0.4, 0.8, 1)
-
-[node name="Robe" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(-18, 8, 18, 8, 14, 20, -14, 20)
-color = Color(0.15, 0.35, 0.7, 1)
+[node name="Body" type="AnimatedSprite2D" parent="."]
+script = ExtResource("5")
+texture_filter = 1
+position = Vector2(0, -13)
+scale = Vector2(0.28, 0.28)
+sprite_frames = ExtResource("6")
+animation = &"idle"
+autoplay = "idle"
+auto_variant = true
 
 [node name="PlayerStats" type="Node2D" parent="."]
 script = ExtResource("2")

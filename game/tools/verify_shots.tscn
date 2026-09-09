@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://verify_shots00"]
+
+[ext_resource type="Script" path="res://tools/verify_shots.gd" id="1"]
+
+[node name="VerifyShots" type="Node"]
+script = ExtResource("1")

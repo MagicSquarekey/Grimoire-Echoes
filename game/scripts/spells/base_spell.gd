@@ -23,7 +23,13 @@ enum SpellType {
 	CONTROL,     # 控制
 	CHAIN,       # 连锁
 	MARK,        # 标记
-	DASH         # 冲刺
+	DASH,        # 冲刺
+	MELEE,       # 近战
+	SHIELD,      # 护盾
+	RING,        # 环绕
+	FAN,         # 扇形
+	WAVE,        # 波浪
+	GROUND_AOE   # 地面范围
 }
 @export var spell_type = SpellType.PROJECTILE
 

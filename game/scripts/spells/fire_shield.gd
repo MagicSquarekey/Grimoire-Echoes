@@ -70,7 +70,7 @@ func _create_fire_particles_material() -> ParticleProcessMaterial:
 func _process_damage_loop() -> void:
 	while is_active and active_timer > 0:
 		# 获取范围内的敌人
-		var enemies = _get_enemies_in_range(shield_radius)
+		var enemies = _get_enemies_in_circle(shield_radius)
 		
 		for enemy in enemies:
 			# 检查伤害冷却
@@ -96,7 +96,7 @@ func _process_damage_loop() -> void:
 		await get_tree().process_frame
 
 ## 获取范围内敌人
-func _get_enemies_in_range(range: float) -> Array[Node2D]:
+func _get_enemies_in_circle(range: float) -> Array[Node2D]:
 	var enemies: Array[Node2D] = []
 	var space_state = get_world_2d().direct_space_state
 	

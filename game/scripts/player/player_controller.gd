@@ -20,10 +20,17 @@ signal dodge_ended()
 func _ready() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
-	
+
+	# player.tscn 将 player_body 导出为 NodePath("..")，须先解析为节点
+	# （否则下方把 NodePath 当 Node 调用会报错，stats 解析失败导致移动失效）
+	if player_body is NodePath:
+		player_body = get_node_or_null(player_body)
+	if stats is NodePath:
+		stats = get_node_or_null(stats)
+
 	if player_body == null:
 		player_body = get_parent()
-	
+
 	if stats == null and player_body:
 		stats = player_body.get_node_or_null("PlayerStats")
 	

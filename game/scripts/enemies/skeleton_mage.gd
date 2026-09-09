@@ -112,14 +112,23 @@ func _fire_projectile() -> void:
 	tween.tween_callback(projectile.queue_free).set_delay(0.01)
 	
 	# 碰撞检测（Area2D body_entered）
-	projectile.body_entered.connect(func(body):
-		if body.is_in_group("player") and body.has_method("take_damage"):
-			body.take_damage(attack_damage, self)
-			projectile.queue_free()
-	)
-	
-	# 超时销毁
-	get_tree().create_timer(max_lifetime).timeout.connect(func():
-		if is_instance_valid(projectile):
-			projectile.queue_free()
-	)
+	# 用方法引用+bind代替lambda：法师被释放时连接自动断开，
+	# 避免 lambda 捕获的 self/projectile 释放后仍被调用（"Lambda capture was freed"报错）
+	projectile.body_entered.connect(_on_projectile_hit.bind(projectile))
+
+	# 超时销毁（同上；projectile 已销毁时由 _on_projectile_timeout 安全跳过）
+	get_tree().create_timer(max_lifetime).timeout.connect(_on_projectile_timeout.bind(projectile))
+
+## 弹射物命中处理
+func _on_projectile_hit(body: Node2D, projectile) -> void:
+	if not is_instance_valid(projectile):
+		return
+	if body.is_in_group("player") and body.has_method("take_damage"):
+		body.take_damage(attack_damage, self)
+		projectile.queue_free()
+
+## 弹射物超时销毁（projectile 参数须无类型：定时器触发时它可能已被释放，
+## 类型化参数会因 freed Object 无法转换而报错）
+func _on_projectile_timeout(projectile) -> void:
+	if is_instance_valid(projectile):
+		projectile.queue_free()

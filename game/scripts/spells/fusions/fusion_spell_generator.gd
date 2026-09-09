@@ -43,7 +43,9 @@ class FusionRecipeData:
 		fusion_type = _fusion_type
 
 ## 融合配方表
-const FUSION_RECIPES: Array[FusionRecipeData] = [
+## 注意：FusionRecipeData.new() 不是常量表达式，GDScript 2.0 不允许用 const 保存，
+## 必须使用 static var，否则整个脚本无法编译。
+static var FUSION_RECIPES: Array[FusionRecipeData] = [
 	# 🔥+💧 = 蒸汽爆炸
 	FusionRecipeData.new(
 		"fusion_steam_blast",

@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://game_scene"]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/systems/game_controller.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/systems/combat_manager.gd" id="2"]
@@ -7,11 +7,11 @@
 [ext_resource type="Script" path="res://scripts/enemies/enemy_spawner.gd" id="5"]
 [ext_resource type="Script" path="res://scripts/spells/fusion_system.gd" id="6"]
 [ext_resource type="Script" path="res://scripts/map/game_background.gd" id="7"]
-[ext_resource type="PackedScene" uid="uid://player_scene" path="res://scenes/player/player.tscn" id="8"]
-[ext_resource type="PackedScene" uid="uid://hud_scene" path="res://scenes/ui/hud.tscn" id="9"]
-[ext_resource type="PackedScene" uid="uid://upgrade_panel_scene" path="res://scenes/ui/upgrade_panel.tscn" id="10"]
-[ext_resource type="PackedScene" uid="uid://pause_menu_scene" path="res://scenes/ui/pause_menu.tscn" id="11"]
-[ext_resource type="PackedScene" uid="uid://game_over_screen" path="res://scenes/ui/game_over_screen.tscn" id="12"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="8"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="9"]
+[ext_resource type="PackedScene" path="res://scenes/ui/upgrade_panel.tscn" id="10"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="11"]
+[ext_resource type="PackedScene" path="res://scenes/ui/game_over_screen.tscn" id="12"]
 
 [node name="Game" type="Node2D"]
 

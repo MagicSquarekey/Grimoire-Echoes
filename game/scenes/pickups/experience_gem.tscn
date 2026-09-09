@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://experience_gem_scene"]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/pickups/experience_gem.gd" id="1"]
 

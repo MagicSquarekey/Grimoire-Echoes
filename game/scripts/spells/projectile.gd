@@ -23,10 +23,13 @@ var hit_targets: Array[Node2D] = []
 @onready var lifetime_timer: Timer = $LifetimeTimer
 
 func _ready() -> void:
-    # 连接信号
-    area_entered.connect(_on_area_entered)
-    body_entered.connect(_on_body_entered)
-    lifetime_timer.timeout.connect(_on_lifetime_timeout)
+    # 连接信号（projectile.tscn 的 [connection] 段可能已连接过，避免重复连接报错）
+    if not area_entered.is_connected(_on_area_entered):
+        area_entered.connect(_on_area_entered)
+    if not body_entered.is_connected(_on_body_entered):
+        body_entered.connect(_on_body_entered)
+    if not lifetime_timer.timeout.is_connected(_on_lifetime_timeout):
+        lifetime_timer.timeout.connect(_on_lifetime_timeout)
 
 func _physics_process(delta: float) -> void:
     # 移动
