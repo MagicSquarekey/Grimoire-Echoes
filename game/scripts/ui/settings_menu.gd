@@ -29,7 +29,11 @@ func _on_volume_changed(value: float) -> void:
 	if AudioManager.has_method("set_master_volume"):
 		AudioManager.set_master_volume(master_volume)
 
-## 关闭设置
-func _on_close_pressed() -> void:
+## 关闭设置（按钮 / 游戏内 ESC 共用）
+func close_settings() -> void:
 	get_tree().paused = false
 	hide()
+
+## 关闭设置
+func _on_close_pressed() -> void:
+	close_settings()

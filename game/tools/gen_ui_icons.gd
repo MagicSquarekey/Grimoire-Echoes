@@ -1,13 +1,16 @@
-## gen_ui_icons.gd - 程序化生成 UI 图标 PNG（几何形状光栅化，4x 超采样抗锯齿）
+## gen_ui_icons.gd - 程序化生成 UI 图标 PNG（几何形状光栅化，3x 超采样抗锯齿）
 ## 用法: godot --headless --path <项目> -s res://tools/gen_ui_icons.gd
-## 输出: res://assets/ui/icons/*.png
+## 输出: res://assets/ui/icons/*.png（128px 高清，形状坐标沿用旧 32 空间自动 ×SCALE）
 extends SceneTree
 
 const OUT := "res://assets/ui/icons"
-const SIZE := 32
-const SS := 4
+const SIZE := 128
+## 旧 32 空间 → 输出空间 缩放系数
+const SCALE := 4.0
+const SS := 3
 
 # 形状: {"t": "circle"/"capsule"/"ringseg"/"poly", ...参数, "c": Color}
+# 坐标均为旧 32 空间。
 
 func _initialize() -> void:
 	DirAccess.make_dir_recursive_absolute(OUT)
@@ -27,27 +30,45 @@ func _initialize() -> void:
 
 # ---------- 光栅化 ----------
 
+## 一次保存 = 投影层(偏移+半透明黑) + 图形本体层
 func _save(icon_name: String, shapes: Array) -> void:
 	var img := Image.create(SIZE, SIZE, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
-	var half := 1.0 / (SS * 2.0)
+	# 每个最终像素取 SS*SS 个子样本
 	for y in SIZE:
 		for x in SIZE:
 			var col := Color(0, 0, 0, 0)
 			for sy in SS:
 				for sx in SS:
 					var p := Vector2(x + (sx + 0.5) / SS, y + (sy + 0.5) / SS)
-					# 从最上层往下找第一个命中的形状
-					var hit: Color = Color(0, 0, 0, 0)
-					for i in range(shapes.size() - 1, -1, -1):
-						if _hit(shapes[i], p):
-							hit = shapes[i]["c"]
-							break
+					# 投影层
+					var shadow := _sample(shapes, (p - Vector2(3.0, 4.0)) / SCALE)
+					if shadow.a > 0.0:
+						var sc := Color(0, 0, 0, 0.32)
+						col = _over(sc, col)
+					# 本体层
+					var hit := _sample(shapes, p / SCALE)
 					if hit.a > 0.0:
-						col += hit
-			col = col / float(SS * SS)
+						col = _over(hit, col)
 			img.set_pixel(x, y, col)
 	img.save_png("%s/%s.png" % [OUT, icon_name])
+
+## 在旧 32 空间坐标 p 处取样：返回最上层命中色
+func _sample(shapes: Array, p: Vector2) -> Color:
+	# 从最上层往下找第一个命中的形状
+	for i in range(shapes.size() - 1, -1, -1):
+		if _hit(shapes[i], p):
+			return shapes[i]["c"]
+	return Color(0, 0, 0, 0)
+
+## dst 之上叠加 src（标准 over 混合）
+func _over(src: Color, dst: Color) -> Color:
+	var a := src.a + dst.a * (1.0 - src.a)
+	if a <= 0.0:
+		return Color(0, 0, 0, 0)
+	var mixed := (src * src.a + dst * dst.a * (1.0 - src.a)) / a
+	mixed.a = a
+	return mixed
 
 func _hit(shape: Dictionary, p: Vector2) -> bool:
 	match shape["t"]:
@@ -89,7 +110,7 @@ func _star_pts(center: Vector2, r_out: float, r_in: float) -> PackedVector2Array
 		pts.append(center + Vector2(cos(ang), sin(ang)) * r)
 	return pts
 
-# ---------- 各图标 ----------
+# ---------- 各图标（坐标为旧 32 空间） ----------
 
 func _heart() -> Array:
 	var c := Color("ef5a63")

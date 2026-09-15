@@ -84,10 +84,10 @@ func _process_vine_damage(area: Area2D) -> void:
 		# 应用伤害
 		_apply_damage(enemy)
 		
-		# 应用缠绕效果
+		# 应用缠绕效果（用 STUN 表示定身类状态）
 		if enemy.has_method("apply_status_effect"):
 			enemy.apply_status_effect(
-				StatusEffectSystem.EffectType.ROOT,
+				StatusEffectSystem.EffectType.STUN,
 				0.0,
 				entangle_duration
 			)

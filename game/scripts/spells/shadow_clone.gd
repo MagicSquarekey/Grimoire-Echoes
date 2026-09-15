@@ -54,13 +54,17 @@ func _create_shadow_clone(position: Vector2) -> Node2D:
 	
 	# 开始分身AI
 	_process_clone_ai(clone)
-	
-	# 定时销毁
+
+	# 定时销毁（异步辅助函数，保持本函数同步可返回）
+	_schedule_clone_removal(clone)
+
+	return clone
+
+## 分身存活 clone_duration 秒后自动销毁
+func _schedule_clone_removal(clone: Node2D) -> void:
 	await get_tree().create_timer(clone_duration).timeout
 	if is_instance_valid(clone):
 		clone.queue_free()
-	
-	return clone
 
 ## 分身AI处理
 func _process_clone_ai(clone: Node2D) -> void:

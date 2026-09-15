@@ -1,0 +1,60 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/pickups/health_potion.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/fx/glow_soft.png" id="2"]
+[ext_resource type="Script" path="res://scenes/fx/pulse_glow.gd" id="3"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_add"]
+blend_mode = 1
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_potion"]
+radius = 8.0
+
+[node name="HealthPotion" type="Area2D"]
+collision_layer = 16
+collision_mask = 1
+script = ExtResource("1")
+
+[node name="FxGlow" type="Sprite2D" parent="."]
+material = SubResource("CanvasItemMaterial_add")
+modulate = Color(1, 0.3, 0.35, 0.55)
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("2")
+script = ExtResource("3")
+base_scale = Vector2(0.7, 0.7)
+breathe_speed = 2.6
+scale_amp = 0.1
+alpha_min = 0.35
+alpha_max = 0.6
+
+[node name="PolygonGlow" type="Polygon2D" parent="."]
+material = SubResource("CanvasItemMaterial_add")
+polygon = PackedVector2Array(-7, -1, 7, -1, 8.5, 3, 7, 7, 4, 9.5, 0, 10.5, -4, 9.5, -7, 7, -8.5, 3)
+color = Color(1, 0.3, 0.35, 0.25)
+
+[node name="PolygonVisual" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-6, -1, 6, -1, 7.5, 3, 6.2, 6.5, 3.6, 8.8, 0, 9.6, -3.6, 8.8, -6.2, 6.5, -7.5, 3)
+color = Color(0.86, 0.16, 0.22, 1)
+
+[node name="LiquidTop" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-6, -1, 6, -1, 6.4, 1, -6.4, 1)
+color = Color(1, 0.45, 0.5, 0.9)
+
+[node name="BottleNeck" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-2.5, -9, 2.5, -9, 2.5, -1, -2.5, -1)
+color = Color(0.45, 0.28, 0.5, 1)
+
+[node name="BottleCork" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-3, -11, 3, -11, 3, -9, -3, -9)
+color = Color(0.82, 0.68, 0.4, 1)
+
+[node name="LiquidShine" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-4, 1, -2, 1, -3, 7, -5, 6)
+color = Color(1, 0.75, 0.75, 0.6)
+
+[node name="GlassShine" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(3.2, 2.5, 4.8, 3.2, 3.6, 6.8, 2.2, 6)
+color = Color(1, 1, 1, 0.5)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_potion")

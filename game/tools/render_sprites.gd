@@ -11,46 +11,77 @@ const PROBE_DIR := "C:/Users/10359/Desktop/Grimoire-Echoes/temp_shots/probe"
 # 相机参数
 const PITCH_DEG := -50.0     # 俯视角（类幸存者）
 const FOV_DEG := 40.0
-const FRAME := 384           # 单帧尺寸
-const PORTRAIT := 512        # 立绘尺寸
+const FRAME := 512           # 单帧尺寸（512px 高清渲染，游戏内按比例缩小显示）
+const PORTRAIT := 640        # 立绘尺寸
 const MARGIN_FACTOR := 2.05  # 距离裕量
 
 # 渲染任务表：模型 → 输出前缀 → 动画映射（输出名: 源动画名）
+# 动画命名约定：idle / run（侧视，兼容旧引用）+ idle_front / run_front /
+# idle_back / run_back（纵向朝向）。*_front 面向镜头（向下移动），
+# *_back 背对镜头（向上移动）。三视角帧内容相同，仅相机方位角不同。
 const JOBS := [
 	{
 		"model": "res://assets/models/mage.glb",
 		"prefix": "player_water",
 		"frames": 8,
-		"anims": {"idle": "Idle", "run": "Running_A"},
+		"anims": {"idle": "Idle", "run": "Running_A",
+			"idle_front": "Idle", "run_front": "Running_A",
+			"idle_back": "Idle", "run_back": "Running_A"},
 		"portrait": true,
 	},
 	{
 		"model": "res://assets/models/skeleton_mage.glb",
 		"prefix": "enemy_skeleton_mage",
 		"frames": 8,
-		"anims": {"idle": "Idle", "run": "Running_A", "attack": "Spellcast_Shoot"},
+		"anims": {"idle": "Idle", "run": "Running_A", "attack": "Spellcast_Shoot",
+			"idle_front": "Idle", "run_front": "Running_A",
+			"idle_back": "Idle", "run_back": "Running_A"},
 		"portrait": false,
 	},
 	{
 		"model": "res://assets/models/blue_demon.gltf",
 		"prefix": "enemy_shadow_servant",
 		"frames": 8,
-		"anims": {"idle": "Idle", "run": "Run", "attack": "Punch"},
+		"anims": {"idle": "Idle", "run": "Run", "attack": "Punch",
+			"idle_front": "Idle", "run_front": "Run",
+			"idle_back": "Idle", "run_back": "Run"},
 		"portrait": false,
 	},
 	{
 		"model": "res://assets/models/creep_creature.glb",
 		"prefix": "enemy_swarm_bug",
 		"frames": 8,
-		"anims": {"idle": "Idle1_Action", "run": "Walk1_Action", "attack": "Bite_Action"},
+		"anims": {"idle": "Idle1_Action", "run": "Walk1_Action", "attack": "Bite_Action",
+			"idle_front": "Idle1_Action", "run_front": "Walk1_Action",
+			"idle_back": "Idle1_Action", "run_back": "Walk1_Action"},
 		"portrait": false,
 		"tint_color": Color(0.45, 0.8, 0.4),  # 灰白模型 → 绿色小虫
+	},
+	{
+		"model": "res://assets/models/orc.gltf",
+		"prefix": "enemy_orc_warrior",
+		"frames": 8,
+		"anims": {"idle": "Idle", "run": "Run", "attack": "Punch",
+			"idle_front": "Idle", "run_front": "Run",
+			"idle_back": "Idle", "run_back": "Run"},
+		"portrait": false,
+	},
+	{
+		"model": "res://assets/models/demon.gltf",
+		"prefix": "enemy_demon_hound",
+		"frames": 8,
+		"anims": {"idle": "Idle", "run": "Run", "attack": "Punch",
+			"idle_front": "Idle", "run_front": "Run",
+			"idle_back": "Idle", "run_back": "Run"},
+		"portrait": false,
 	},
 ]
 
 # 侧视图方位角：实测各模型面向 +Z，yaw=270 时画面朝右
 const SIDE_YAW_DEG := 270.0
+# 正面（面向镜头，用于向下移动）与背面（背对镜头，用于向上移动）方位角
 const FRONT_YAW_DEG := 0.0
+const BACK_YAW_DEG := 180.0
 # 距离缩放（有效裕量 = MARGIN_FACTOR * dist_scale，越小越近越大）
 const FRAMES_DIST_SCALE := 0.60
 const PORTRAIT_DIST_SCALE := 0.55
@@ -63,6 +94,9 @@ const PORTRAIT_PITCH_DEG := -18.0
 var vp: SubViewport
 var stage: Node3D
 var cam: Camera3D
+var key_light: DirectionalLight3D
+var fill_light: DirectionalLight3D
+var rim_light: DirectionalLight3D
 
 
 func _ready() -> void:
@@ -93,21 +127,47 @@ func _build_stage() -> void:
 
 	var env := Environment.new()
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.82, 0.85, 0.92)
-	env.ambient_light_energy = 0.85
+	env.ambient_light_color = Color(0.78, 0.80, 0.90)
+	env.ambient_light_energy = 0.62
 	var we := WorldEnvironment.new()
 	we.environment = env
 	stage.add_child(we)
 
-	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-48, -35, 0)
-	sun.light_energy = 1.25
-	stage.add_child(sun)
+	# 三点摄影棚灯光：主光（暖/带软阴影）+ 辅光（冷/低强度）+ 轮廓光（勾边）
+	key_light = DirectionalLight3D.new()
+	key_light.light_energy = 1.35
+	key_light.shadow_enabled = true
+	key_light.shadow_blur = 1.6
+	stage.add_child(key_light)
+
+	fill_light = DirectionalLight3D.new()
+	fill_light.light_energy = 0.45
+	stage.add_child(fill_light)
+
+	rim_light = DirectionalLight3D.new()
+	rim_light.light_energy = 1.9
+	stage.add_child(rim_light)
 
 	cam = Camera3D.new()
 	cam.fov = FOV_DEG
 	cam.current = true
 	stage.add_child(cam)
+
+
+## 三点灯光布置：随取景方位角旋转，保证任何朝向下光影一致
+func _rig_lights(aabb: AABB, yaw_deg: float) -> void:
+	var target: Vector3 = aabb.get_center()
+	_place_light(key_light, target, yaw_deg - 45.0, -38.0, Color(1.0, 0.93, 0.82))
+	_place_light(fill_light, target, yaw_deg + 65.0, -16.0, Color(0.70, 0.80, 1.0))
+	_place_light(rim_light, target, yaw_deg + 155.0, -26.0, Color(0.96, 0.97, 1.0))
+
+func _place_light(light: DirectionalLight3D, target: Vector3, yaw_deg: float,
+		pitch_deg: float, color: Color) -> void:
+	var pitch := deg_to_rad(pitch_deg)
+	var yaw := deg_to_rad(yaw_deg)
+	light.position = target + Vector3(sin(yaw) * cos(pitch), -sin(pitch), cos(yaw) * cos(pitch)) * 6.0
+	light.look_at(target, Vector3.UP)
+	light.light_color = color
 
 
 func _place_camera(aabb: AABB, yaw_deg: float, dist_scale: float,
@@ -122,6 +182,7 @@ func _place_camera(aabb: AABB, yaw_deg: float, dist_scale: float,
 	var dist: float = fit * MARGIN_FACTOR * dist_scale
 	cam.position = target + Vector3(sin(yaw) * cos(pitch), -sin(pitch), cos(yaw) * cos(pitch)) * dist
 	cam.look_at(target, Vector3.UP)
+	_rig_lights(aabb, yaw_deg)
 
 
 func _compute_aabb(model: Node3D) -> AABB:
@@ -212,8 +273,12 @@ func _run_full() -> void:
 	_make_shadow_blob()
 
 	var char_results: Array[Dictionary] = []
+	# RENDER_ONLY=enemy_x,enemy_y 时只渲指定 prefix（增量渲染，不动其他产物）
+	var only := OS.get_environment("RENDER_ONLY")
 	for job in JOBS:
 		var prefix: String = job["prefix"]
+		if not only.is_empty() and not (prefix in only.split(",")):
+			continue
 		var scene: PackedScene = load(job["model"])
 		if scene == null:
 			push_error("model missing: " + str(job["model"]))
@@ -223,7 +288,13 @@ func _run_full() -> void:
 		var anim_info: Array[Dictionary] = []
 		for out_name in job["anims"]:
 			var src: String = job["anims"][out_name]
-			var imgs := await _capture(scene, src, int(job["frames"]), SIDE_YAW_DEG, FRAME,
+			# 输出名决定方位角：*_front 正面（面向镜头）、*_back 背面、其余侧视
+			var yaw := SIDE_YAW_DEG
+			if out_name.ends_with("_front"):
+				yaw = FRONT_YAW_DEG
+			elif out_name.ends_with("_back"):
+				yaw = BACK_YAW_DEG
+			var imgs := await _capture(scene, src, int(job["frames"]), yaw, FRAME,
 					FRAMES_DIST_SCALE, job)
 			if imgs.is_empty():
 				continue
@@ -263,13 +334,13 @@ func _bake_tinted_variants(scene: PackedScene, char_results: Array[Dictionary]) 
 			t.save_png("%s/portraits/%s.png" % [OUT_BASE, tint_name])
 		print("[render] portraits saved")
 
-	# 从已生成的 water 帧烘焙 fire / lightning 帧 + 图集
+	# 从已生成的 water 帧烘焙 fire / lightning 帧 + 图集（含正/背面朝向动画）
 	var water_dir := OUT_BASE + "/player_water"
 	for tint_name in TINTS:
 		var out_dir: String = OUT_BASE + "/" + str(tint_name)
 		DirAccess.make_dir_recursive_absolute(out_dir)
 		var anim_info: Array[Dictionary] = []
-		for anim in ["idle", "run"]:
+		for anim in ["idle", "run", "idle_front", "run_front", "idle_back", "run_back"]:
 			var imgs: Array[Image] = []
 			var i := 0
 			while true:
@@ -373,7 +444,9 @@ func _write_sprite_frames_tres(prefix: String, anims: Array[Dictionary]) -> void
 			sub_lines.append("")
 			frame_refs.append("{\"duration\": 1.0, \"texture\": SubResource(\"%s\")}" % sub_key)
 		var anim_name: String = a["name"]
-		var speed: float = speed_map.get(anim_name, 8.0)
+		# 朝向变体（*_front / *_back）沿用基础动画的帧率
+		var base_name: String = anim_name.replace("_front", "").replace("_back", "")
+		var speed: float = speed_map.get(base_name, 8.0)
 		anim_blocks.append("{\n\"frames\": [%s],\n\"loop\": true,\n\"name\": &\"%s\",\n\"speed\": %.1f\n}"
 			% [", ".join(frame_refs), anim_name, speed])
 	var load_steps := (ext_id - 1) + sub_count + 1

@@ -87,7 +87,12 @@ func cast_spell(slot_index: int, target_pos: Vector2 = Vector2.ZERO) -> bool:
 	# 施放法术
 	var success = spell.cast(target_pos)
 	if success:
-		cooldowns[slot_index] = spell.cooldown
+		# 冷却缩减（商店「冷却减少」等）真实生效（上限 60% 防零冷却）
+		var cd_scale := 1.0
+		var stats = get_parent().get_node_or_null("PlayerStats") if get_parent() else null
+		if stats:
+			cd_scale = 1.0 - clampf(stats.cooldown_reduction, 0.0, 0.6)
+		cooldowns[slot_index] = spell.cooldown * cd_scale
 		spell_cast.emit(spell, slot_index)
 	
 	return success

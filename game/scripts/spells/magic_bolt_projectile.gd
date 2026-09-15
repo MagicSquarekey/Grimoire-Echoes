@@ -4,9 +4,9 @@ extends Area2D
 
 ## 飞行参数
 var direction = Vector2.RIGHT
-var speed = 520.0
-var damage = 12.0
-var lifetime = 1.2
+var speed = 600.0
+var damage = 14.0
+var lifetime = 1.5  # 624→900px 有效射程：追击/走位中的命中率校准
 var caster = null
 
 func _ready() -> void:
@@ -45,6 +45,18 @@ func _ready() -> void:
 	
 	rotation = direction.angle()
 	body_entered.connect(_on_body_entered)
+	
+	# 2.5D 飞行高度：弹体视觉抬升到世界上方 8px（抵消弹体旋转），地面小阴影留在原位
+	var lift := Vector2(0, -8).rotated(-rotation)
+	for visual in [trail, body_visual, core]:
+		visual.position = lift
+	var shadow := Polygon2D.new()
+	shadow.polygon = PackedVector2Array([
+		Vector2(-7, -2.5), Vector2(7, -2.5), Vector2(7, 2.5), Vector2(-7, 2.5)
+	])
+	shadow.color = Color(0, 0, 0, 0.28)
+	add_child(shadow)
+	shadow.position = Vector2(0, 4).rotated(-rotation)
 
 func _physics_process(delta: float) -> void:
 	position += direction * speed * delta

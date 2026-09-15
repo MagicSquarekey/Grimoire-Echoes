@@ -1,0 +1,70 @@
+[gd_scene load_steps=9 format=3 uid="uid://orcwarrior0001"]
+
+[ext_resource type="Script" path="res://scripts/enemies/orc_warrior.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/visual/sprite_body.gd" id="2"]
+[ext_resource type="SpriteFrames" path="res://assets/sprites/gen/enemy_orc_warrior.tres" id="3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/gen/shadow_blob.png" id="4"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_1"]
+radius = 20.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_2"]
+radius = 24.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_3"]
+radius = 20.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_4"]
+radius = 300.0
+
+[node name="OrcWarrior" type="CharacterBody2D"]
+script = ExtResource("1")
+collision_layer = 2
+collision_mask = 5
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_1")
+
+[node name="Shadow" type="Sprite2D" parent="."]
+modulate = Color(1, 1, 1, 0.8)
+position = Vector2(0, 16)
+scale = Vector2(0.4, 0.22)
+texture = ExtResource("4")
+
+[node name="Body" type="AnimatedSprite2D" parent="."]
+script = ExtResource("2")
+texture_filter = 3
+position = Vector2(0, -14)
+scale = Vector2(0.1650, 0.1650)
+sprite_frames = ExtResource("3")
+animation = &"idle"
+autoplay = "idle"
+
+[node name="Hitbox" type="Area2D" parent="."]
+collision_layer = 2
+collision_mask = 1
+
+[node name="HitboxShape" type="CollisionShape2D" parent="Hitbox"]
+shape = SubResource("CircleShape2D_2")
+
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 2
+collision_mask = 5
+
+[node name="HurtboxShape" type="CollisionShape2D" parent="Hurtbox"]
+shape = SubResource("CircleShape2D_3")
+
+[node name="DetectionArea" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 1
+
+[node name="DetectionShape" type="CollisionShape2D" parent="DetectionArea"]
+shape = SubResource("CircleShape2D_4")
+
+[node name="AITimer" type="Timer" parent="."]
+wait_time = 0.5
+autostart = true
+
+[connection signal="area_entered" from="Hurtbox" to="." method="_on_hurtbox_area_entered"]
+[connection signal="body_entered" from="DetectionArea" to="." method="_on_detection_area_body_entered"]
+[connection signal="timeout" from="AITimer" to="." method="_on_ai_timer_timeout"]

@@ -144,6 +144,99 @@ func test_preparing_to_spawning_transition() -> void:
 	_check(wm.enemies_to_spawn == wm._calculate_enemy_count(), "待生成数量应为该波敌人总数")
 	print("✅ 准备期→生成期转换测试通过")
 
+## 测试新波次曲线：前3波缓冲期、第4波上台阶、间隔递减
+func test_wave_plan_curve() -> void:
+	var plan1 = EnemySpawner.build_wave_plan(1)
+	var plan3 = EnemySpawner.build_wave_plan(3)
+	var plan4 = EnemySpawner.build_wave_plan(4)
+	var plan10 = EnemySpawner.build_wave_plan(10)
+
+	_check(plan1["total"] >= 8 and plan1["total"] <= 16, "第1波应为缓冲期数量(8-16只)，实际 %d" % plan1["total"])
+	_check(plan3["total"] <= 16, "第3波仍应为缓冲期(≤16只)，实际 %d" % plan3["total"])
+	_check(plan4["total"] > plan3["total"], "第4波数量应明显上台阶")
+	_check(plan10["total"] > plan4["total"], "第10波数量应多于第4波")
+
+	# spawn_interval：第1波0.5 → 第10波约0.22 → 后期不低于0.15
+	_check(absf(plan1["spawn_interval"] - 0.5) < 0.001, "第1波间隔应为0.5s")
+	_check(plan10["spawn_interval"] <= 0.3, "第10波间隔应≤0.3s，实际 %.2f" % plan10["spawn_interval"])
+	var plan30 = EnemySpawner.build_wave_plan(30)
+	_check(plan30["spawn_interval"] >= 0.15, "后期间隔不应低于0.15s下限")
+
+	# 总量提升：1-15 波总量应约为旧配置(445)的1.4倍以上
+	var sum := 0
+	for w in range(1, 16):
+		sum += int(EnemySpawner.build_wave_plan(w)["total"])
+	_check(sum >= 620, "1-15波总数量应≥620(旧配置约445的1.4倍)，实际 %d" % sum)
+	print("✅ 新波次曲线测试通过 (1-15波总量=%d)" % sum)
+
+## 测试新怪物波次出场与阵型标记
+func test_wave_plan_composition() -> void:
+	var plan4 = EnemySpawner.build_wave_plan(4)
+	var has_hound := false
+	for e in plan4["events"]:
+		if e["type"] == "demon_hound":
+			has_hound = true
+			_check(e["formation"] == "pack", "猎犬应为狼群包(pack)阵型")
+			_check(e["count"] >= 4 and e["count"] <= 6, "猎犬应4-6只一包")
+	_check(has_hound, "第4波应出现恶魔猎犬")
+
+	var plan8 = EnemySpawner.build_wave_plan(8)
+	var has_orc := false
+	for e in plan8["events"]:
+		if e["type"] == "orc_warrior":
+			has_orc = true
+	_check(has_orc, "第8波应出现兽人勇士")
+
+	var has_ring := false
+	for w in [3, 6, 11]:
+		for e in EnemySpawner.build_wave_plan(w)["events"]:
+			if e["type"] == "swarm_bug" and e["formation"] == "ring":
+				has_ring = true
+	_check(has_ring, "虫群应存在环形包抄(ring)阵型")
+	print("✅ 波次构成（新怪物/阵型）测试通过")
+
+## 测试Boss波与精英数量规则
+func test_boss_and_elite_plan() -> void:
+	for w in [5, 10, 15, 20]:
+		var plan = EnemySpawner.build_wave_plan(w)
+		_check(plan["is_boss"], "第%d波应为Boss波" % w)
+		var has_boss := false
+		for e in plan["events"]:
+			if e["type"] == "boss":
+				has_boss = true
+		_check(has_boss, "第%d波事件中应含boss" % w)
+
+	for w in [1, 2, 3, 4]:
+		_check(EnemySpawner.build_wave_plan(w)["elite_count"] == 0, "第%d波不应有精英" % w)
+	_check(EnemySpawner.build_wave_plan(5)["elite_count"] >= 1, "第5波起应有精英")
+	_check(EnemySpawner.build_wave_plan(10)["elite_count"] >= 2, "第10波起精英应≥2只")
+	_check(EnemySpawner.build_wave_plan(7)["is_boss"] == false, "第7波不应是Boss波")
+	print("✅ Boss波与精英规则测试通过")
+
+## 测试无限模式持续加码
+func test_infinite_wave_growth() -> void:
+	var plan16 = EnemySpawner.build_wave_plan(16)
+	var plan25 = EnemySpawner.build_wave_plan(25)
+	var plan40 = EnemySpawner.build_wave_plan(40)
+
+	_check(plan25["total"] > plan16["total"], "无限模式数量应随波次增长")
+	_check(plan40["total"] > plan25["total"], "无限模式数量应持续增长")
+	_check(plan40["spawn_interval"] >= 0.15, "无限模式间隔不应低于0.15s下限")
+	_check(plan25["elite_count"] >= plan16["elite_count"], "无限模式精英数不应减少")
+	# Boss 每 5 波
+	for w in [25, 30, 40]:
+		_check(EnemySpawner.build_wave_plan(w)["is_boss"], "第%d波应为Boss波" % w)
+	_check(EnemySpawner.build_wave_plan(23)["is_boss"] == false, "第23波不应是Boss波")
+	print("✅ 无限模式成长测试通过")
+
+## 测试 is_boss_wave 助手
+func test_is_boss_wave_helper() -> void:
+	var wm = _create_wave_manager()
+	_check(wm.is_boss_wave(5), "is_boss_wave(5)应为真")
+	_check(wm.is_boss_wave(10), "is_boss_wave(10)应为真")
+	_check(not wm.is_boss_wave(7), "is_boss_wave(7)应为假")
+	print("✅ is_boss_wave助手测试通过")
+
 ## 运行所有测试
 func run_all_tests() -> bool:
 	print("开始运行波次管理器测试...")
@@ -157,6 +250,11 @@ func run_all_tests() -> bool:
 	test_wave_info()
 	test_boss_wave_detection()
 	test_preparing_to_spawning_transition()
+	test_wave_plan_curve()
+	test_wave_plan_composition()
+	test_boss_and_elite_plan()
+	test_infinite_wave_growth()
+	test_is_boss_wave_helper()
 	for wm in _created_managers:
 		if is_instance_valid(wm):
 			wm.free()

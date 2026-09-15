@@ -173,3 +173,149 @@ visible = false
 [node name="SpellSlots" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 8
+
+[node name="WeaponSlots" type="HBoxContainer" parent="."]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = -70.0
+offset_right = 236.0
+offset_bottom = -12.0
+theme_override_constants/separation = 8
+
+[node name="Slot0" type="Panel" parent="WeaponSlots"]
+custom_minimum_size = Vector2(48, 48)
+
+[node name="Icon" type="TextureRect" parent="WeaponSlots/Slot0"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 5.0
+offset_top = 5.0
+offset_right = -5.0
+offset_bottom = -5.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Level" type="Label" parent="WeaponSlots/Slot0"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -30.0
+offset_top = -16.0
+offset_right = -2.0
+offset_bottom = -2.0
+theme_override_colors/font_color = Color(1, 0.85, 0.45, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = ""
+horizontal_alignment = 2
+
+[node name="Slot1" type="Panel" parent="WeaponSlots"]
+custom_minimum_size = Vector2(48, 48)
+
+[node name="Icon" type="TextureRect" parent="WeaponSlots/Slot1"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 5.0
+offset_top = 5.0
+offset_right = -5.0
+offset_bottom = -5.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Level" type="Label" parent="WeaponSlots/Slot1"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -30.0
+offset_top = -16.0
+offset_right = -2.0
+offset_bottom = -2.0
+theme_override_colors/font_color = Color(1, 0.85, 0.45, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = ""
+horizontal_alignment = 2
+
+[node name="Slot2" type="Panel" parent="WeaponSlots"]
+custom_minimum_size = Vector2(48, 48)
+
+[node name="Icon" type="TextureRect" parent="WeaponSlots/Slot2"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 5.0
+offset_top = 5.0
+offset_right = -5.0
+offset_bottom = -5.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Level" type="Label" parent="WeaponSlots/Slot2"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -30.0
+offset_top = -16.0
+offset_right = -2.0
+offset_bottom = -2.0
+theme_override_colors/font_color = Color(1, 0.85, 0.45, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = ""
+horizontal_alignment = 2
+
+[node name="Slot3" type="Panel" parent="WeaponSlots"]
+custom_minimum_size = Vector2(48, 48)
+
+[node name="Icon" type="TextureRect" parent="WeaponSlots/Slot3"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 5.0
+offset_top = 5.0
+offset_right = -5.0
+offset_bottom = -5.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Level" type="Label" parent="WeaponSlots/Slot3"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -30.0
+offset_top = -16.0
+offset_right = -2.0
+offset_bottom = -2.0
+theme_override_colors/font_color = Color(1, 0.85, 0.45, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = ""
+horizontal_alignment = 2

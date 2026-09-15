@@ -27,6 +27,9 @@ var play_time = 0.0
 var kill_count = 0
 var total_gold = 0
 
+# 游戏模式："normal" 标准波次 / "boss_rush" Boss 连战（由主菜单设定，跨场景保留）
+var game_mode: String = "normal"
+
 # 游戏速度
 var game_speed = 1.0
 var speed_multiplier = 1.0
@@ -38,6 +41,31 @@ var current_save_slot = -1
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+
+## 失焦自动暂停：对局中切出窗口立即冻结并弹出暂停菜单（单机防挂机死亡）
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		_auto_pause_on_focus_loss()
+
+func _auto_pause_on_focus_loss() -> void:
+	if current_state != GameState.PLAYING:
+		return
+	var tree := get_tree()
+	if tree == null or tree.paused:
+		return
+	tree.paused = true
+	var pm = tree.current_scene.get_node_or_null("UI/PauseMenu") if tree.current_scene else null
+	if pm and pm.has_method("show_menu"):
+		pm.show_menu()
+	EventBus.show_toast.emit("窗口失焦，已自动暂停", 2.0)
+
+## 顿帧：短暂冻结时间流动（升级/Boss 击杀等高光时刻的打击感）
+func hitstop(duration: float = 0.06, freeze_scale: float = 0.05) -> void:
+	if Engine.time_scale < 1.0:
+		return  # 已在顿帧中，不叠加
+	Engine.time_scale = freeze_scale
+	await get_tree().create_timer(duration, true, false, true).timeout
+	Engine.time_scale = 1.0
 
 func _process(delta: float) -> void:
 	if current_state == GameState.PLAYING:
@@ -91,8 +119,10 @@ func continue_game(slot: int) -> void:
 		total_gold = save_data.get("gold", 0)
 		
 		# 重置波次管理器并恢复波次
+		# （存档 wave 可能为 0（开局早期自动存档），下限钳到 1，避免出现 Wave 0/-1
+		#  导致 build_wave_plan 负索引取到末尾波次配置）
 		WaveManager.reset()
-		WaveManager.current_wave = current_wave - 1  # start_wave会+1
+		WaveManager.current_wave = maxi(1, current_wave) - 1  # start_wave会+1
 		
 		change_state(GameState.PLAYING)
 		EventBus.game_loaded.emit(slot)

@@ -12,20 +12,26 @@ extends BaseSpell
 ## 当前AoE实例
 var active_aoe: Node2D = null
 
-## 重写施放逻辑
-func _on_cast(target: Node2D = null) -> void:
+## 重写施放逻辑（target 可能是敌人节点或 Vector2 坐标——SpellCaster.auto_cast 传坐标）
+func _on_cast(target = null) -> void:
     if aoe_delay > 0:
         await get_tree().create_timer(aoe_delay).timeout
-    
+
     # 获取施放位置
-    var cast_position = Vector2.ZERO
-    if target:
-        cast_position = target.global_position
-    elif owner_node:
-        cast_position = owner_node.global_position
-    
+    var cast_position := _resolve_cast_position(target)
+
     # 创建AoE效果
     _create_aoe_effect(cast_position)
+
+## 解析施放目标点：Vector2 坐标 / 节点全局位置 / 回退到自身位置
+func _resolve_cast_position(target = null) -> Vector2:
+    if target is Vector2:
+        return target
+    if target is Node2D and is_instance_valid(target):
+        return target.global_position
+    if owner_node is Node2D:
+        return (owner_node as Node2D).global_position
+    return global_position
 
 ## 创建AoE效果
 func _create_aoe_effect(position: Vector2) -> void:

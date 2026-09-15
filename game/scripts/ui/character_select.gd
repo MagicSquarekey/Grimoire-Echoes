@@ -80,10 +80,11 @@ func _generate_character_list() -> void:
 func _on_character_selected(index: int) -> void:
 	selected_index = index
 	
-	# 更新选择状态
+	# 更新选择状态（未选中卡片适度压暗：过度压暗会让卡片间隙的背景透出，
+	# 形似一条孤立的"光条残留物"）
 	for i in range(character_list.get_child_count()):
 		var button = character_list.get_child(i)
-		button.modulate = Color.WHITE if i == index else Color(0.6, 0.6, 0.6)
+		button.modulate = Color.WHITE if i == index else Color(0.78, 0.78, 0.86)
 
 	# [UI美化] 选中态：金色描边 + 轻微放大
 	for i in range(character_list.get_child_count()):
@@ -135,11 +136,11 @@ func _make_card_style(selected: bool, hovered: bool = false) -> StyleBoxFlat:
 	elif hovered:
 		sb.bg_color = Color(0.14, 0.11, 0.26, 0.96)
 		sb.border_color = Color(0.65, 0.55, 0.9)
-		sb.shadow_color = Color(0, 0, 0, 0.4)
-		sb.shadow_size = 6
+		sb.shadow_color = Color(0, 0, 0, 0.45)
+		sb.shadow_size = 8
 	else:
 		sb.bg_color = Color(0.1, 0.08, 0.19, 0.92)
 		sb.border_color = Color(0.36, 0.3, 0.55)
-		sb.shadow_color = Color(0, 0, 0, 0.35)
-		sb.shadow_size = 4
+		sb.shadow_color = Color(0, 0, 0, 0.45)
+		sb.shadow_size = 8
 	return sb

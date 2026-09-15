@@ -30,9 +30,9 @@ texture = ExtResource("4")
 
 [node name="Body" type="AnimatedSprite2D" parent="."]
 script = ExtResource("2")
-texture_filter = 1
+texture_filter = 3
 position = Vector2(0, 2)
-scale = Vector2(0.09, 0.09)
+scale = Vector2(0.0675, 0.0675)
 sprite_frames = ExtResource("3")
 animation = &"idle"
 autoplay = "idle"

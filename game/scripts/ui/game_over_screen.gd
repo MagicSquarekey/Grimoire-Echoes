@@ -4,7 +4,7 @@ extends CanvasLayer
 
 # UI引用
 @onready var title_label: Label = $MarginContainer/VBoxContainer/TitleLabel
-@onready var stats_label: Label = $MarginContainer/VBoxContainer/StatsLabel
+@onready var stats_label: Label = $MarginContainer/VBoxContainer/StatsPanel/StatsMargin/StatsLabel
 @onready var respawn_button: Button = $MarginContainer/VBoxContainer/HBoxContainer/RespawnButton
 @onready var menu_button: Button = $MarginContainer/VBoxContainer/HBoxContainer/MenuButton
 
@@ -16,14 +16,19 @@ func _ready() -> void:
 ## 显示游戏结束画面
 func show_game_over(stats: Dictionary) -> void:
 	title_label.text = "游戏结束"
-	
-	var stats_text = "波次: %d\n击杀: %d\n时间: %s" % [
+
+	var weapons: Array = stats.get("weapons", [])
+	var weapons_text := "、".join(weapons) if not weapons.is_empty() else "无"
+	var stats_text = "波次: %d\n击杀: %d\n金币: %d\n等级: %d\n时间: %s\n最终武器: %s" % [
 		stats.get("wave", 0),
 		stats.get("kills", 0),
-		_format_time(stats.get("time", 0.0))
+		stats.get("gold", 0),
+		stats.get("level", 1),
+		_format_time(stats.get("time", 0.0)),
+		weapons_text
 	]
 	stats_label.text = stats_text
-	
+
 	show()
 	get_tree().paused = true
 

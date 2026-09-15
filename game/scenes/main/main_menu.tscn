@@ -1,9 +1,22 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="1"]
 [ext_resource type="Texture2D" path="res://assets/sprites/gen/portraits/player_fire.png" id="2"]
 [ext_resource type="Shader" path="res://assets/ui/starfield.gdshader" id="3"]
 [ext_resource type="Shader" path="res://assets/ui/portrait_bob.gdshader" id="4"]
+[ext_resource type="Shader" path="res://assets/ui/title_shimmer.gdshader" id="5"]
+
+[sub_resource type="Environment" id="Env_glow_menu"]
+background_mode = 0
+glow_enabled = true
+glow_intensity = 0.7
+glow_strength = 1.0
+glow_bloom = 0.06
+glow_blend_mode = 2
+glow_hdr_threshold = 0.85
+
+[sub_resource type="ShaderMaterial" id="shimmer_mat"]
+shader = ExtResource("5")
 
 [sub_resource type="Gradient" id="grad_bg"]
 offsets = PackedFloat32Array(0, 0.55, 1)
@@ -42,6 +55,9 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env_glow_menu")
 
 [node name="Background" type="TextureRect" parent="."]
 layout_mode = 1
@@ -112,6 +128,7 @@ grow_horizontal = 2
 theme_override_constants/separation = 6
 
 [node name="TitleLabel" type="Label" parent="TitleGroup"]
+material = SubResource("shimmer_mat")
 layout_mode = 2
 theme_type_variation = &"TitleLabel"
 theme_override_font_sizes/font_size = 84
@@ -137,9 +154,9 @@ anchors_preset = 4
 anchor_top = 0.5
 anchor_bottom = 0.5
 offset_left = 200.0
-offset_top = -160.0
+offset_top = -230.0
 offset_right = 560.0
-offset_bottom = 160.0
+offset_bottom = 230.0
 grow_vertical = 2
 theme_override_constants/separation = 18
 
@@ -147,6 +164,12 @@ theme_override_constants/separation = 18
 layout_mode = 2
 custom_minimum_size = Vector2(360, 62)
 text = "✦ 开始冒险"
+
+[node name="BossRushButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(360, 62)
+text = "⚡ Boss 连战"
+tooltip_text = "无尽 Boss 挑战：没有小怪，只有越来越强的 Boss"
 
 [node name="ContinueButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2

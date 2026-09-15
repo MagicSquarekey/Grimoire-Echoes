@@ -84,10 +84,10 @@ func _process_touch_damage(area: Area2D, direction: Vector2) -> void:
 		# 应用伤害
 		_apply_damage(enemy)
 		
-		# 应用攻击力降低效果
+		# 应用攻击力降低效果（用 CURSE 表示削弱类状态）
 		if enemy.has_method("apply_status_effect"):
 			enemy.apply_status_effect(
-				StatusEffectSystem.EffectType.ATTACK_DOWN,
+				StatusEffectSystem.EffectType.CURSE,
 				damage_reduction,
 				reduction_duration
 			)

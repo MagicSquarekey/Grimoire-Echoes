@@ -1,6 +1,13 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/pickups/gold_coin.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/fx/glow_soft.png" id="2"]
+[ext_resource type="Script" path="res://scenes/fx/pulse_glow.gd" id="3"]
+[ext_resource type="Texture2D" path="res://assets/fx/spark.png" id="4"]
+[ext_resource type="Script" path="res://scenes/fx/sparkle_twinkle.gd" id="5"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_add"]
+blend_mode = 1
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_coin"]
 radius = 8.0
@@ -10,12 +17,41 @@ collision_layer = 16
 collision_mask = 1
 script = ExtResource("1")
 
+[node name="FxGlow" type="Sprite2D" parent="."]
+material = SubResource("CanvasItemMaterial_add")
+modulate = Color(1, 0.85, 0.2, 0.55)
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("2")
+script = ExtResource("3")
+base_scale = Vector2(0.7, 0.7)
+breathe_speed = 2.2
+scale_amp = 0.08
+alpha_min = 0.35
+alpha_max = 0.6
+
+[node name="FxSparkle" type="Sprite2D" parent="."]
+material = SubResource("CanvasItemMaterial_add")
+modulate = Color(1, 1, 0.9, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("4")
+script = ExtResource("5")
+min_interval = 0.9
+max_interval = 2.4
+
 [node name="PolygonVisual" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(0, -8, 6, -4, 8, 2, 4, 7, -2, 8, -7, 3, -7, -3, -2, -7)
+polygon = PackedVector2Array(9.5, 0.0, 9.0, 2.9, 7.7, 5.6, 5.6, 7.7, 2.9, 9.0, 0.0, 9.5, -2.9, 9.0, -5.6, 7.7, -7.7, 5.6, -9.0, 2.9, -9.5, 0.0, -9.0, -2.9, -7.7, -5.6, -5.6, -7.7, -2.9, -9.0, 0.0, -9.5, 2.9, -9.0, 5.6, -7.7, 7.7, -5.6, 9.0, -2.9)
 color = Color(1, 0.85, 0.2, 1)
 
+[node name="PolygonInner" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(6.5, 0.0, 6.2, 2.0, 5.3, 3.8, 3.8, 5.3, 2.0, 6.2, 0.0, 6.5, -2.0, 6.2, -3.8, 5.3, -5.3, 3.8, -6.2, 2.0, -6.5, 0.0, -6.2, -2.0, -5.3, -3.8, -3.8, -5.3, -2.0, -6.2, 0.0, -6.5, 2.0, -6.2, 3.8, -5.3, 5.3, -3.8, 6.2, -2.0)
+color = Color(0.96, 0.72, 0.24, 1)
+
+[node name="PolygonShine" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-1.8, -6.2, 0.6, -6.8, -0.6, -2.2, -3.0, -2.8)
+color = Color(1, 0.97, 0.8, 0.85)
+
 [node name="PolygonGlow" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(0, -11, 8, -5, 11, 3, 5, 10, -3, 11, -10, 4, -10, -4, -3, -10)
+polygon = PackedVector2Array(12.0, 0.0, 11.4, 3.7, 9.7, 7.1, 7.1, 9.7, 3.7, 11.4, 0.0, 12.0, -3.7, 11.4, -7.1, 9.7, -9.7, 7.1, -11.4, 3.7, -12.0, 0.0, -11.4, -3.7, -9.7, -7.1, -7.1, -9.7, -3.7, -11.4, -0.0, -12.0, 3.7, -11.4, 7.1, -9.7, 9.7, -7.1, 11.4, -3.7)
 color = Color(1, 0.85, 0.2, 0.3)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]

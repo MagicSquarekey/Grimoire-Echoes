@@ -16,18 +16,13 @@ func _init() -> void:
 	spell_type = SpellType.GROUND_AOE
 	damage = 20.0
 	cooldown = 5.0
-	mana_cost = 20.0
+	mana_cost = 0.0  # 自动战斗法术不消耗法力
 	aoe_radius = 150.0
 
-## 重写施放逻辑
-func _on_cast(target: Node2D = null) -> void:
-	# 获取施放位置
-	var cast_position = Vector2.ZERO
-	if target:
-		cast_position = target.global_position
-	elif owner_node:
-		cast_position = owner_node.global_position
-	
+## 重写施放逻辑（target 可能是 Vector2 坐标）
+func _on_cast(target = null) -> void:
+	var cast_position := _resolve_cast_position(target)
+
 	# 创建冰锥阵列
 	_create_ice_spike_array(cast_position)
 
@@ -36,46 +31,63 @@ func _create_ice_spike_array(position: Vector2) -> void:
 	# 创建阵列区域
 	var array_area = Area2D.new()
 	array_area.global_position = position
-	
-	# 添加碰撞形状
-	var collision = CollisionShape2D.new()
-	var circle = CircleShape2D.new()
-	circle.radius = aoe_radius
-	collision.shape = circle
-	array_area.add_child(collision)
-	
+
 	# 设置碰撞层
 	array_area.collision_layer = 0
 	array_area.collision_mask = 2  # 敌人层
-	
+
 	# 添加到场景
 	get_tree().current_scene.add_child(array_area)
-	
+
 	# 创建视觉效果
 	_create_array_visual(array_area)
-	
+
 	# 持续造成伤害
 	_process_array_damage(array_area)
-	
+
 	# 持续时间结束后销毁
 	await get_tree().create_timer(array_duration).timeout
-	array_area.queue_free()
+	if is_instance_valid(array_area):
+		array_area.queue_free()
 
-## 创建阵列视觉效果
+## 创建阵列视觉效果：冰锥晶簇 + 冰屑放射（water/ice 预设碎片运动）
 func _create_array_visual(area: Area2D) -> void:
-	# 创建冰锥精灵
+	var col := FxLib.color_for("ice")
+
+	# 冰锥晶簇（菱形碎片竖立）
 	for i in range(spike_count):
-		var spike_sprite = Sprite2D.new()
-		spike_sprite.name = "IceSpike_%d" % i
-		spike_sprite.modulate = Color(0.7, 0.9, 1.0, 0.8)  # 冰蓝色
-		spike_sprite.position = Vector2(randf_range(-aoe_radius, aoe_radius), randf_range(-aoe_radius, aoe_radius))
-		area.add_child(spike_sprite)
-	
-	# 创建粒子效果
-	var particles = GPUParticles2D.new()
+		var spike := Polygon2D.new()
+		var h := randf_range(14.0, 26.0)
+		spike.polygon = PackedVector2Array([
+			Vector2(-5, 0), Vector2(0, -h), Vector2(5, 0), Vector2(0, 6)
+		])
+		spike.color = Color(col.r, col.g, col.b, 0.9)
+		spike.position = Vector2(randf_range(-aoe_radius, aoe_radius) * 0.8, randf_range(-aoe_radius, aoe_radius) * 0.6)
+		area.add_child(spike)
+		# 破土而出
+		spike.scale = Vector2(0.1, 0.1)
+		var tw := spike.create_tween()
+		tw.tween_property(spike, "scale", Vector2.ONE, 0.2) \
+				.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+	# 冰面光斑
+	var glow := Sprite2D.new()
+	glow.texture = load("res://assets/fx/glow_soft.png")
+	glow.material = CanvasItemMaterial.new()
+	glow.material.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	glow.modulate = Color(col.r, col.g, col.b, 0.3)
+	glow.scale = Vector2.ONE * (aoe_radius / 24.0)
+	area.add_child(glow)
+
+	# 冰屑粒子（放射后下坠）
+	var particles := CPUParticles2D.new()
 	particles.emitting = true
-	particles.lifetime = array_duration
-	particles.amount = 10
+	particles.amount = 14
+	particles.lifetime = 0.4
+	particles.initial_velocity_min = 120.0
+	particles.initial_velocity_max = 230.0
+	particles.gravity = Vector2(0, 90)
+	particles.color = Color(col.r, col.g, col.b, 0.9)
 	area.add_child(particles)
 
 ## 持续造成伤害
@@ -85,14 +97,21 @@ func _process_array_damage(area: Area2D) -> void:
 		# 等待冰锥生成间隔
 		await get_tree().create_timer(spike_interval).timeout
 		elapsed += spike_interval
-		
+
+		# 区域可能已随场景销毁
+		if not is_instance_valid(area) or not is_inside_tree():
+			return
+
 		# 获取范围内的敌人
 		var enemies = _get_enemies_in_aoe(area.global_position, aoe_radius)
-		
+
 		for enemy in enemies:
 			# 应用伤害
 			_apply_damage(enemy)
-			
+
+			# 冰屑爆裂（ice 预设）
+			FxLib.element_burst(self, enemy.global_position, "ice", 0.5)
+
 			# 应用减速效果
 			if enemy.has_method("apply_status_effect"):
 				enemy.apply_status_effect(

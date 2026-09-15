@@ -1,4 +1,4 @@
-; Engine configuration file.
+﻿; Engine configuration file.
 ; It's best edited using the editor UI and not directly,
 ; since the parameters that go here are not all obvious.
 ;
@@ -107,6 +107,7 @@ minimap_toggle={
 
 [rendering]
 
-textures/canvas_textures/default_texture_filter=0
+textures/canvas_textures/default_texture_filter=1
+viewport/hdr_2d=true
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"

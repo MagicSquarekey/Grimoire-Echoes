@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://w_shots000000"]
+
+[ext_resource type="Script" path="res://tools/w_shots.gd" id="1"]
+
+[node name="WShots" type="Node"]
+script = ExtResource("1")

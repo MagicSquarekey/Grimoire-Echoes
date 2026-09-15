@@ -60,4 +60,4 @@ theme_override_constants/separation = 14
 layout_mode = 2
 custom_minimum_size = Vector2(280, 54)
 size_flags_horizontal = 4
-text = "离开商店"
+text = "离开商店 ▸ 开始下一波"

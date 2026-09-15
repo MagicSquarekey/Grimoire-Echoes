@@ -17,27 +17,44 @@ func _init() -> void:
 	spell_type = SpellType.PROJECTILE
 	damage = bolt_damage
 	cooldown = 1.5
-	mana_cost = 12.0
+	mana_cost = 0.0  # 自动战斗法术不消耗法力
 
-## 重写投射物创建
-func _create_projectile() -> Node2D:
+## 重写施放：朝目标方向发射（不依赖鼠标——auto_cast 传目标坐标）
+func _on_cast(target = null) -> void:
+	var target_pos := Vector2.ZERO
+	if target is Vector2:
+		target_pos = target
+	elif target is Node2D and is_instance_valid(target):
+		target_pos = target.global_position
+	else:
+		target_pos = global_position + Vector2(100, 0)
+	var dir := global_position.direction_to(target_pos)
+	if dir.length_squared() < 0.5:
+		dir = Vector2.RIGHT
+
+	_cast_projectile_targeted(dir)
+
+## 朝指定方向发射暗影弹
+func _cast_projectile_targeted(dir: Vector2) -> void:
 	var projectile = projectile_scene.instantiate()
-	if projectile.has_method("setup"):
+	if projectile:
+		get_tree().current_scene.add_child(projectile)
+		projectile.global_position = global_position + dir * 14.0
 		projectile.setup(
 			_calculate_damage(),
 			bolt_speed,
-			owner_node.global_position.direction_to(get_global_mouse_position()),
-			"shadow",
+			dir,
+			spell_element,
 			0,  # 穿透
 			0,  # 击退
 			spell_level,
 			owner_node
 		)
-	return projectile
 
 ## 重写法术升级
 func _on_upgrade() -> void:
 	bolt_damage *= 1.08
+	damage = bolt_damage  # 同步到基类伤害字段（结算走 damage）
 	
 	match spell_level:
 		5:

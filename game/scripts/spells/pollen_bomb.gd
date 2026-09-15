@@ -16,18 +16,13 @@ func _init() -> void:
 	spell_type = SpellType.GROUND_AOE
 	damage = damage_per_second
 	cooldown = 6.0
-	mana_cost = 20.0
+	mana_cost = 0.0  # 自动战斗法术不消耗法力
 	aoe_radius = bomb_radius
 
-## 重写施放逻辑
-func _on_cast(target: Node2D = null) -> void:
-	# 获取施放位置
-	var cast_position = Vector2.ZERO
-	if target:
-		cast_position = target.global_position
-	elif owner_node:
-		cast_position = owner_node.global_position
-	
+## 重写施放逻辑（target 可能是 Vector2 坐标）
+func _on_cast(target = null) -> void:
+	var cast_position := _resolve_cast_position(target)
+
 	# 创建花粉炸弹
 	_create_pollen_bomb(cast_position)
 
@@ -36,46 +31,57 @@ func _create_pollen_bomb(position: Vector2) -> void:
 	# 创建花粉区域
 	var pollen_area = Area2D.new()
 	pollen_area.global_position = position
-	
-	# 添加碰撞形状
-	var collision = CollisionShape2D.new()
-	var circle = CircleShape2D.new()
-	circle.radius = bomb_radius
-	collision.shape = circle
-	pollen_area.add_child(collision)
-	
+
 	# 设置碰撞层
 	pollen_area.collision_layer = 0
 	pollen_area.collision_mask = 2  # 敌人层
-	
+
 	# 添加到场景
 	get_tree().current_scene.add_child(pollen_area)
-	
+
 	# 创建视觉效果
 	_create_pollen_visual(pollen_area)
-	
+
 	# 持续造成伤害和致盲效果
 	_process_pollen_damage(pollen_area)
-	
+
 	# 持续时间结束后销毁
 	await get_tree().create_timer(bomb_duration).timeout
-	pollen_area.queue_free()
+	if is_instance_valid(pollen_area):
+		pollen_area.queue_free()
 
-## 创建花粉视觉效果
+## 创建花粉视觉效果：绿色毒云 + 叶片旋转飘落（nature 预设运动模式）
 func _create_pollen_visual(area: Area2D) -> void:
-	# 创建花粉精灵
-	var pollen_sprite = Sprite2D.new()
-	pollen_sprite.name = "PollenBombSprite"
-	pollen_sprite.modulate = Color(0.8, 0.9, 0.2, 0.6)  # 黄绿色
-	pollen_sprite.scale = Vector2(2.0, 2.0)
-	area.add_child(pollen_sprite)
-	
-	# 创建粒子效果
-	var particles = GPUParticles2D.new()
-	particles.name = "PollenBombParticles"
+	var col := FxLib.color_for("nature")
+
+	# 花粉云（柔光斑，脉动）
+	var cloud := Sprite2D.new()
+	cloud.texture = load("res://assets/fx/glow_soft.png")
+	cloud.material = CanvasItemMaterial.new()
+	cloud.material.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	cloud.modulate = Color(col.r, col.g, col.b, 0.4)
+	cloud.scale = Vector2.ONE * (bomb_radius / 22.0)
+	area.add_child(cloud)
+	var tw := cloud.create_tween()
+	tw.set_loops()
+	tw.tween_property(cloud, "modulate:a", 0.25, 0.7)
+	tw.tween_property(cloud, "modulate:a", 0.45, 0.7)
+
+	# 叶片粒子：旋转+下坠飘落
+	var particles := CPUParticles2D.new()
 	particles.emitting = true
-	particles.lifetime = bomb_duration
-	particles.amount = 20
+	particles.amount = 14
+	particles.lifetime = 1.4
+	particles.initial_velocity_min = 30.0
+	particles.initial_velocity_max = 90.0
+	particles.gravity = Vector2(0, 52)
+	particles.angular_velocity_min = -260.0
+	particles.angular_velocity_max = 260.0
+	particles.scale_amount_min = 0.9
+	particles.scale_amount_max = 1.3
+	particles.color = Color(col.r, col.g, col.b, 0.9)
+	particles.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
+	particles.emission_sphere_radius = bomb_radius * 0.7
 	area.add_child(particles)
 
 ## 持续造成伤害和致盲效果
@@ -85,14 +91,21 @@ func _process_pollen_damage(area: Area2D) -> void:
 		# 等待1秒
 		await get_tree().create_timer(1.0).timeout
 		elapsed += 1.0
-		
+
+		# 区域可能已随场景销毁
+		if not is_instance_valid(area) or not is_inside_tree():
+			return
+
 		# 获取范围内的敌人
 		var enemies = _get_enemies_in_aoe(area.global_position, bomb_radius)
-		
+
 		for enemy in enemies:
 			# 应用伤害
 			_apply_damage(enemy)
-			
+
+			# 叶片爆裂（nature 预设）
+			FxLib.element_burst(self, enemy.global_position, spell_element, 0.4)
+
 			# 概率致盲
 			if randf() < blind_chance:
 				if enemy.has_method("apply_status_effect"):
@@ -105,6 +118,7 @@ func _process_pollen_damage(area: Area2D) -> void:
 ## 重写法术升级
 func _on_upgrade() -> void:
 	damage_per_second *= 1.08
+	damage = damage_per_second  # 同步到基类伤害字段（结算走 damage）
 	
 	match spell_level:
 		5:

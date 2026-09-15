@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://player001"]
+[gd_scene load_steps=16 format=3 uid="uid://player001"]
 
 [ext_resource type="Script" path="res://scripts/player/player.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/player/player_stats.gd" id="2"]
@@ -7,9 +7,27 @@
 [ext_resource type="Script" path="res://scripts/visual/sprite_body.gd" id="5"]
 [ext_resource type="SpriteFrames" path="res://assets/sprites/gen/player_water.tres" id="6"]
 [ext_resource type="Texture2D" path="res://assets/sprites/gen/shadow_blob.png" id="7"]
+[ext_resource type="Texture2D" path="res://assets/fx/glow_soft.png" id="8"]
+[ext_resource type="Script" path="res://scenes/fx/pulse_glow.gd" id="9"]
+[ext_resource type="Script" path="res://scripts/player/game_camera.gd" id="10"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1"]
 radius = 18.0
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_add"]
+blend_mode = 1
+
+[sub_resource type="Gradient" id="grad_motes_init"]
+offsets = PackedFloat32Array(0, 0.35, 0.7, 1)
+colors = PackedColorArray(0.98, 0.86, 0.55, 1, 0.78, 0.66, 1, 1, 0.55, 0.88, 1, 1, 0.95, 0.8, 0.6, 1)
+
+[sub_resource type="Gradient" id="grad_motes_life"]
+offsets = PackedFloat32Array(0, 0.15, 0.7, 1)
+colors = PackedColorArray(0, 0, 0, 0, 0, 0, 0, 0.55, 0, 0, 0, 0.45, 0, 0, 0, 0)
+
+[sub_resource type="Gradient" id="grad_aura_life"]
+offsets = PackedFloat32Array(0, 0.5, 1)
+colors = PackedColorArray(0, 0, 0, 0.3, 0, 0, 0, 0.48, 0, 0, 0, 0.3)
 
 [node name="Player" type="CharacterBody2D"]
 script = ExtResource("1")
@@ -18,6 +36,25 @@ collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_1")
+
+[node name="AmbientMotes" type="CPUParticles2D" parent="."]
+z_index = -1
+material = SubResource("CanvasItemMaterial_add")
+amount = 34
+texture = ExtResource("8")
+lifetime = 9.0
+preprocess = 9.0
+emission_shape = 3
+emission_rect_extents = Vector2(900, 620)
+direction = Vector2(0, -1)
+spread = 180.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 2.0
+initial_velocity_max = 9.0
+scale_amount_min = 0.04
+scale_amount_max = 0.13
+color_initial_ramp = SubResource("grad_motes_init")
+color_ramp = SubResource("grad_motes_life")
 
 [node name="Glow" type="Polygon2D" parent="."]
 polygon = PackedVector2Array(24, 0, 22.2, 9.4, 16.4, 16.4, 9.4, 22.2, 0, 24, -9.4, 22.2, -16.4, 16.4, -22.2, 9.4, -24, 0, -22.2, -9.4, -16.4, -16.4, -9.4, -22.2, 0, -24, 9.4, -22.2, 16.4, -16.4, 22.2, -9.4)
@@ -29,11 +66,24 @@ position = Vector2(0, 14)
 scale = Vector2(0.34, 0.18)
 texture = ExtResource("7")
 
+[node name="AuraGlow" type="Sprite2D" parent="."]
+material = SubResource("CanvasItemMaterial_add")
+modulate = Color(0.45, 0.7, 1, 0.4)
+position = Vector2(0, 10)
+scale = Vector2(0.55, 0.34)
+texture = ExtResource("8")
+script = ExtResource("9")
+base_scale = Vector2(0.55, 0.34)
+breathe_speed = 1.8
+scale_amp = 0.12
+alpha_min = 0.28
+alpha_max = 0.5
+
 [node name="Body" type="AnimatedSprite2D" parent="."]
 script = ExtResource("5")
-texture_filter = 1
+texture_filter = 3
 position = Vector2(0, -13)
-scale = Vector2(0.28, 0.28)
+scale = Vector2(0.2100, 0.2100)
 sprite_frames = ExtResource("6")
 animation = &"idle"
 autoplay = "idle"
@@ -51,3 +101,4 @@ script = ExtResource("4")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 zoom = Vector2(1.5, 1.5)
+script = ExtResource("10")

@@ -12,7 +12,7 @@ func _init() -> void:
 	spell_name = "奥术飞弹"
 	spell_element = "arcane"
 	spell_type = SpellType.PROJECTILE
-	damage = 12.0
+	damage = 14.0  # 校准：以 5 波 Boss 战 60-90 秒为基准的单体输出
 	cooldown = 0.8
 	mana_cost = 0.0
 	max_level = 20

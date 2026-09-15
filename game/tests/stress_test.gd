@@ -50,6 +50,15 @@ func _run_simulation(delta: float) -> void:
 	p.is_invincible = true
 	p.stats.heal(9999.0)
 
+	# 波次间隙商店会暂停游戏：模拟玩家"跳过"继续压测推进
+	var shop = get_tree().current_scene.get_node_or_null("UI/Shop")
+	if shop and shop.visible:
+		shop._on_close_pressed()
+	# 升级面板弹出时点第一个选项，避免长时间停在不相关的暂停上
+	var panel = get_tree().current_scene.get_node_or_null("UI/UpgradePanel")
+	if panel and panel.visible:
+		panel._on_option_selected(0)
+
 	# 每2秒全场清怪 → 推动波次 + 大量死亡/掉落/生成
 	kill_timer += delta
 	if kill_timer >= 2.0:

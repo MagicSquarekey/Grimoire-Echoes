@@ -1,0 +1,25 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scenes/fx/hit_burst.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/fx/spark.png" id="2"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_add"]
+blend_mode = 1
+
+[node name="HitBurst" type="CPUParticles2D"]
+material = SubResource("CanvasItemMaterial_add")
+emitting = false
+amount = 14
+lifetime = 0.4
+one_shot = true
+explosiveness = 1.0
+texture = ExtResource("2")
+spread = 180.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 90.0
+initial_velocity_max = 170.0
+damping_min = 40.0
+damping_max = 80.0
+scale_amount_min = 0.7
+scale_amount_max = 1.5
+script = ExtResource("1")

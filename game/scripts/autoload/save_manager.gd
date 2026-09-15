@@ -51,7 +51,6 @@ func save_game(slot: int, data: Dictionary) -> bool:
 	file.close()
 	
 	EventBus.game_saved.emit(slot)
-	print("游戏已保存到槽位: ", slot)
 	return true
 
 ## 加载游戏

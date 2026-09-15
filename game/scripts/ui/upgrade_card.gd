@@ -39,6 +39,8 @@ func _ready() -> void:
 	pass
 	# [UI美化] 悬停缩放以中心为轴
 	resized.connect(_center_pivot)
+	# [UI美化] 悬停手型光标
+	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 
 ## [UI美化] 悬停缩放中心点
 func _center_pivot() -> void:
@@ -110,15 +112,29 @@ func _on_gui_input(event: InputEvent) -> void:
 
 ## 鼠标进入效果
 func _on_mouse_entered() -> void:
-	# 放大效果
+	# 放大 + 提亮 + 边框辉光增强
 	var tween = create_tween()
+	tween.set_parallel(true)
 	tween.tween_property(self, "scale", Vector2(1.05, 1.05), 0.1)
+	tween.tween_property(self, "modulate", Color(1.1, 1.1, 1.16, 1.0), 0.12)
+	var sb := get_theme_stylebox("panel")
+	if sb is StyleBoxFlat:
+		var glow := Color(sb.border_color.r, sb.border_color.g, sb.border_color.b, 0.95)
+		sb.border_color = sb.border_color.lerp(glow, 0.6)
+		sb.shadow_color = Color(sb.border_color.r, sb.border_color.g, sb.border_color.b, 0.55)
+		sb.shadow_size = 16
 
 ## 鼠标离开效果
 func _on_mouse_exited() -> void:
-	# 恢复大小
+	# 恢复大小与亮度
 	var tween = create_tween()
+	tween.set_parallel(true)
 	tween.tween_property(self, "scale", Vector2(1.0, 1.0), 0.1)
+	tween.tween_property(self, "modulate", Color(1, 1, 1, 1.0), 0.12)
+	var sb := get_theme_stylebox("panel")
+	if sb is StyleBoxFlat:
+		sb.shadow_size = 8
+		sb.shadow_color = Color(sb.border_color.r, sb.border_color.g, sb.border_color.b, 0.25)
 
 ## 获取选项信息
 func get_option_data() -> Dictionary:

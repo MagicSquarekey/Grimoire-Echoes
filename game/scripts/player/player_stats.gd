@@ -63,7 +63,8 @@ func get_defense_multiplier() -> float:
 	return base_defense * (1.0 + defense_bonus)
 
 func get_move_speed() -> float:
-	return move_speed * (1.0 + speed_bonus)
+	# speed_bonus 与 move_speed_bonus 都计入（商店/升级/遗物共用移速通道）
+	return move_speed * (1.0 + speed_bonus + move_speed_bonus)
 
 func get_crit_rate() -> float:
 	return min(crit_rate + crit_rate_bonus, 1.0)

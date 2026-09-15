@@ -16,6 +16,11 @@ extends CanvasLayer
 ## 法术槽位UI
 @onready var spell_slots: HBoxContainer = $MarginContainer/VBoxContainer/SpellSlots
 
+## 武器槽UI（左下 4 槽：图标 + 等级角标）
+@onready var weapon_slots: HBoxContainer = $WeaponSlots
+
+var _weapon_slots_bound := false
+
 ## 初始化
 func _ready() -> void:
 	# 连接信号（安全检查）
@@ -31,6 +36,10 @@ func _ready() -> void:
 		EventBus.gold_changed.connect(_on_gold_changed)
 	if EventBus.has_signal("enemy_killed"):
 		EventBus.enemy_killed.connect(_on_enemy_killed)
+	# 武器槽：延迟绑定玩家的 SpellCaster（等 battle 场景就绪）
+	_bind_weapon_slots.call_deferred()
+	if EventBus.has_signal("upgrade_selected"):
+		EventBus.upgrade_selected.connect(_on_upgrade_selected_refresh_slots)
 
 func _process(_delta: float) -> void:
 	# 更新时间显示
@@ -105,7 +114,60 @@ func _animate_wave_text() -> void:
 func _shake_bar(bar: ProgressBar) -> void:
 	if bar == null:
 		return
-	
+
 	var tween = create_tween()
 	tween.tween_property(bar, "modulate", Color.RED, 0.05)
 	tween.tween_property(bar, "modulate", Color.WHITE, 0.1)
+
+## ---------- 武器槽（左下 4 槽） ----------
+
+## 绑定玩家 SpellCaster（重试几次，兼容场景加载时序）
+func _bind_weapon_slots(retries: int = 6) -> void:
+	var player = get_tree().get_first_node_in_group("player")
+	if player == null:
+		if retries > 0:
+			_bind_weapon_slots.call_deferred(retries - 1)
+		return
+	var sc = player.get_node_or_null("SpellCaster")
+	if sc == null:
+		if retries > 0:
+			_bind_weapon_slots.call_deferred(retries - 1)
+		return
+	if not sc.spell_changed.is_connected(_on_spell_slots_changed):
+		sc.spell_changed.connect(_on_spell_slots_changed)
+	_refresh_weapon_slots()
+
+## 装备变化 → 刷新
+func _on_spell_slots_changed(_slot_index: int, _old_spell, _new_spell) -> void:
+	_refresh_weapon_slots.call_deferred()
+
+## 升级选择后 → 刷新（等级角标/新法术兜底刷新）
+func _on_upgrade_selected_refresh_slots(_upgrade_type: String, _data: Dictionary) -> void:
+	_refresh_weapon_slots.call_deferred()
+
+## 刷新武器槽图标与等级角标
+func _refresh_weapon_slots() -> void:
+	if weapon_slots == null:
+		return
+	var player = get_tree().get_first_node_in_group("player")
+	var sc = player.get_node_or_null("SpellCaster") if player else null
+	for i in range(4):
+		var slot_ui = weapon_slots.get_node_or_null("Slot%d" % i)
+		if slot_ui == null:
+			continue
+		var icon: TextureRect = slot_ui.get_node_or_null("Icon")
+		var level_label: Label = slot_ui.get_node_or_null("Level")
+		if icon == null or level_label == null:
+			continue
+		var spell = sc.spell_slots[i] if (sc and i < sc.spell_slots.size()) else null
+		if spell:
+			var sid := str(spell.get_meta("spell_id", ""))
+			icon.texture = SpellIcons.icon_for(sid, spell)
+			icon.visible = true
+			slot_ui.modulate = Color.WHITE
+			level_label.text = "Lv.%d" % spell.spell_level
+		else:
+			icon.texture = null
+			icon.visible = false
+			slot_ui.modulate = Color(1, 1, 1, 0.35)  # 空槽半透明
+			level_label.text = ""

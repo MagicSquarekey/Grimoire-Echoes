@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://render_castfr0"]
+
+[ext_resource type="Script" path="res://tools/render_cast_frames.gd" id="1"]
+
+[node name="RenderCastTool" type="Node"]
+script = ExtResource("1")

@@ -86,3 +86,10 @@ custom_minimum_size = Vector2(0, 56)
 bbcode_enabled = true
 text = "[center][color=#b9aede]秘法在血脉中涌动 —— 选择一项强化，聆听回响[/color][/center]"
 fit_content = true
+
+[node name="RerollButton" type="Button" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+custom_minimum_size = Vector2(280, 46)
+text = "🔄 重投（20 金币）"
+tooltip_text = "花费金币刷新本组升级选项，每次重投价格翻倍"

@@ -54,13 +54,17 @@ func _create_vine_guard(position: Vector2) -> Node2D:
 	
 	# 开始守卫AI
 	_process_guard_ai(guard)
-	
-	# 定时销毁
+
+	# 定时销毁（异步辅助函数，保持本函数同步可返回）
+	_schedule_guard_removal(guard)
+
+	return guard
+
+## 守卫存活 guard_duration 秒后自动销毁
+func _schedule_guard_removal(guard: Node2D) -> void:
 	await get_tree().create_timer(guard_duration).timeout
 	if is_instance_valid(guard):
 		guard.queue_free()
-	
-	return guard
 
 ## 守卫AI处理
 func _process_guard_ai(guard: Node2D) -> void:

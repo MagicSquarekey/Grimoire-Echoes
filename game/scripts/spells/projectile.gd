@@ -58,6 +58,9 @@ func setup(
     # 旋转朝向
     rotation = direction.angle()
 
+    # 特效钩子：按元素染色拖尾/光晕，并重置拖尾（池化复用安全）
+    _fx_apply_style()
+
 ## 碰撞检测 - 区域
 func _on_area_entered(area: Area2D) -> void:
     if area.is_in_group("enemy_hurtbox"):
@@ -88,6 +91,9 @@ func _hit_target(target: Node2D) -> void:
     
     # 发送事件
     EventBus.spell_hit.emit(target, damage)
+
+    # 特效钩子：命中爆裂粒子（延迟生成，物理回调安全；按元素预设驱动形状/颜色/运动）
+    FxLib.element_burst(self, global_position, element, 0.8)
     
     # 检查穿透
     pierce_count += 1
@@ -134,17 +140,46 @@ func _apply_element_effect(target: Node2D) -> void:
 func _destroy() -> void:
     # 停止碰撞
     collision_shape.set_deferred("disabled", true)
-    
-    # 淡出效果
+
+    # 淡出效果（整体淡出，连带拖尾/光晕）
     var tween = create_tween()
-    tween.tween_property(sprite, "modulate:a", 0.0, 0.1)
+    tween.tween_property(self, "modulate:a", 0.0, 0.1)
     await tween.finished
-    
+
     queue_free()
 
 ## 生命周期结束
 func _on_lifetime_timeout() -> void:
+    # 特效钩子：寿终爆裂（比命中爆裂稍大）
+    FxLib.element_burst(self, global_position, element, 1.1)
     _destroy()
+
+## 应用元素特效样式：拖尾/光晕按中心化元素预设染色（颜色/线宽/光晕尺寸/锯齿抖动）
+func _fx_apply_style() -> void:
+    var preset := FxLib.preset_for(element)
+    var col: Color = preset["color"]
+    modulate = Color.WHITE
+    # 2.5D 飞行高度：视觉体抬升到世界上方 8px（抵消弹体自身旋转，保证始终"离地"），
+    # 阴影贴图留在节点原位（地面点）跟随移动，营造飞行高度感
+    var lift := Vector2(0, -8).rotated(-rotation)
+    for visual_name in ["Sprite2D", "Glow", "Trail"]:
+        var visual := get_node_or_null(visual_name)
+        if visual is Node2D:
+            (visual as Node2D).position = lift
+    var shadow := get_node_or_null("Shadow")
+    if shadow is Node2D:
+        (shadow as Node2D).position = Vector2(0, 2).rotated(-rotation)
+    var glow := get_node_or_null("Glow")
+    if glow:
+        glow.modulate = Color(col.r, col.g, col.b, 0.9)
+        glow.scale = Vector2.ONE * maxf(0.5, preset["glow_scale"])
+    var trail := get_node_or_null("Trail")
+    if trail and trail.has_method("reset_trail"):
+        trail.modulate = Color(col.r, col.g, col.b, 1.0)
+        trail.width = preset["trail_width"]
+        if "jitter" in trail:
+            trail.jitter = preset["trail_jitter"]
+        trail.reset_trail()
 
 ## 获取伤害（供敌人检测用）
 func get_damage() -> float:

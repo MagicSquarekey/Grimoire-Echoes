@@ -1,0 +1,79 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/events/treasure_chest.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/fx/glow_soft.png" id="2"]
+[ext_resource type="Script" path="res://scenes/fx/pulse_glow.gd" id="3"]
+[ext_resource type="Texture2D" path="res://assets/fx/spark.png" id="4"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_add"]
+blend_mode = 1
+
+[sub_resource type="CircleShape2D" id="ChestShape"]
+radius = 36.0
+
+[node name="TreasureChest" type="Area2D"]
+collision_layer = 16
+collision_mask = 1
+script = ExtResource("1")
+
+[node name="FxGlow" type="Sprite2D" parent="."]
+material = SubResource("CanvasItemMaterial_add")
+modulate = Color(1, 0.85, 0.2, 0.5)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("2")
+script = ExtResource("3")
+base_scale = Vector2(1.5, 1.5)
+breathe_speed = 2.0
+scale_amp = 0.12
+alpha_min = 0.3
+alpha_max = 0.55
+
+[node name="FxSparkle" type="Sprite2D" parent="."]
+modulate = Color(1, 0.95, 0.6, 0.8)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("4")
+
+[node name="Visual" type="Node2D" parent="."]
+
+[node name="ChestBody" type="Polygon2D" parent="Visual"]
+polygon = PackedVector2Array(-30, -10, 30, -10, 33, -6, 33, 8, 30, 13, -30, 13, -33, 8, -33, -6)
+color = Color(0.48, 0.3, 0.14, 1)
+
+[node name="ChestPlank1" type="Polygon2D" parent="Visual"]
+polygon = PackedVector2Array(-31, 1, 31, 1, 31, 2.6, -31, 2.6)
+color = Color(0.38, 0.23, 0.1, 1)
+
+[node name="ChestPlank2" type="Polygon2D" parent="Visual"]
+polygon = PackedVector2Array(-31, 7, 31, 7, 31, 8.6, -31, 8.6)
+color = Color(0.38, 0.23, 0.1, 1)
+
+[node name="ChestLid" type="Polygon2D" parent="Visual"]
+polygon = PackedVector2Array(-30, -22, 30, -22, 33.5, -16, 34, -10, -34, -10, -34.5, -16)
+color = Color(0.62, 0.4, 0.18, 1)
+
+[node name="LidRim" type="Polygon2D" parent="Visual"]
+polygon = PackedVector2Array(-33, -20, 33, -20, 33, -18.5, -33, -18.5)
+color = Color(0.52, 0.32, 0.14, 1)
+
+[node name="GoldTrim" type="Polygon2D" parent="Visual"]
+polygon = PackedVector2Array(-34, -12, 34, -12, 34, -6, -34, -6)
+color = Color(1, 0.82, 0.25, 1)
+
+[node name="CornerL" type="Polygon2D" parent="Visual"]
+polygon = PackedVector2Array(-34, -12, -28, -12, -28, 13, -34, 8, -34.5, -6)
+color = Color(1, 0.82, 0.25, 0.85)
+
+[node name="CornerR" type="Polygon2D" parent="Visual"]
+polygon = PackedVector2Array(28, -12, 34, -12, 34.5, -6, 34, 8, 28, 13)
+color = Color(1, 0.82, 0.25, 0.85)
+
+[node name="Lock" type="Polygon2D" parent="Visual"]
+polygon = PackedVector2Array(-7, -8, 7, -8, 7, 6, 0, 12, -7, 6)
+color = Color(1, 0.9, 0.4, 1)
+
+[node name="LockHole" type="Polygon2D" parent="Visual"]
+polygon = PackedVector2Array(-1.8, -2, 1.8, -2, 1.8, 2, 0, 4.5, -1.8, 2)
+color = Color(0.42, 0.26, 0.08, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("ChestShape")

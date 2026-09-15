@@ -5,6 +5,7 @@ extends Control
 
 ## 组件引用
 @onready var start_button: Button = $VBoxContainer/StartButton
+@onready var boss_rush_button: Button = $VBoxContainer/BossRushButton
 @onready var continue_button: Button = $VBoxContainer/ContinueButton
 @onready var settings_button: Button = $VBoxContainer/SettingsButton
 @onready var quit_button: Button = $VBoxContainer/QuitButton
@@ -13,29 +14,39 @@ extends Control
 func _ready() -> void:
 	# 连接按钮信号
 	start_button.pressed.connect(_on_start_pressed)
+	boss_rush_button.pressed.connect(_on_boss_rush_pressed)
 	continue_button.pressed.connect(_on_continue_pressed)
 	settings_button.pressed.connect(_on_settings_pressed)
 	quit_button.pressed.connect(_on_quit_pressed)
-	
+
 	# 检查是否有存档
 	continue_button.disabled = not SaveManager.has_any_save()
 
 ## 开始新游戏
 func _on_start_pressed() -> void:
+	GameManager.game_mode = "normal"
 	# 切换到角色选择界面
 	GameManager.change_state(GameManager.GameState.CHARACTER_SELECT)
 	get_tree().change_scene_to_file("res://scenes/ui/character_select.tscn")
 
-## 继续游戏
+## Boss 连战：无尽 Boss 挑战（同样走角色选择）
+func _on_boss_rush_pressed() -> void:
+	GameManager.game_mode = "boss_rush"
+	GameManager.change_state(GameManager.GameState.CHARACTER_SELECT)
+	get_tree().change_scene_to_file("res://scenes/ui/character_select.tscn")
+
+## 继续游戏（存档均为标准模式）
 func _on_continue_pressed() -> void:
+	GameManager.game_mode = "normal"
 	var saves = SaveManager.get_all_saves()
-	# 这里可以显示存档选择界面
-	# 目前默认加载第一个存档
+	# 加载第一个有效存档
 	for i in range(saves.size()):
 		if not saves[i].is_empty():
 			GameManager.continue_game(i)
 			get_tree().change_scene_to_file("res://scenes/main/game.tscn")
 			return
+	# 没有可读存档（文件损坏等）：禁用按钮，避免进入空游戏
+	continue_button.disabled = true
 
 ## 打开设置
 func _on_settings_pressed() -> void:

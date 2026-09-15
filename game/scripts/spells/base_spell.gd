@@ -60,7 +60,12 @@ func cast(target = null) -> bool:
 	# 检查冷却
 	if current_cooldown > 0:
 		return false
-	
+
+	# 场景切换保护：宿主场景缺失时跳过本次施放（不消耗资源、不进冷却）
+	var tree := get_tree()
+	if tree == null or tree.current_scene == null or not is_inside_tree():
+		return false
+
 	# 检查法力消耗
 	var player_stats = _get_owner_stats()
 	if player_stats and player_stats.current_mana < mana_cost:
@@ -164,16 +169,18 @@ func _apply_control(target) -> void:
 func _calculate_damage() -> float:
 	var player_stats = _get_owner_stats()
 	var base_damage = damage * _get_level_multiplier()
-	
+
 	if player_stats:
 		base_damage *= player_stats.get_attack_multiplier()
-	
+		# 全局伤害加成（商店「伤害提升」等）真实生效
+		base_damage *= (1.0 + player_stats.attack_damage_bonus)
+
 	if player_stats and player_stats.element_affinity == spell_element:
 		base_damage *= (1.0 + player_stats.element_damage_bonus)
-	
+
 	if player_stats and randf() < player_stats.get_crit_rate():
 		base_damage *= player_stats.get_crit_damage()
-	
+
 	return base_damage
 
 ## 获取等级倍率
