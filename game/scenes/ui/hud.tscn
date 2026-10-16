@@ -1,9 +1,23 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1"]
 [ext_resource type="Texture2D" path="res://assets/ui/icons/heart.png" id="2"]
 [ext_resource type="Texture2D" path="res://assets/ui/icons/mana.png" id="3"]
 [ext_resource type="Texture2D" path="res://assets/ui/icons/star.png" id="4"]
+
+[sub_resource type="StyleBoxFlat" id="stats_panel_sb"]
+bg_color = Color(0.07, 0.058, 0.14, 0.93)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.55, 0.47, 0.78, 0.7)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.4)
+shadow_size = 8
 
 [sub_resource type="StyleBoxFlat" id="bar_fill_hp"]
 bg_color = Color(0.886, 0.341, 0.31, 1)
@@ -183,6 +197,19 @@ offset_top = -70.0
 offset_right = 236.0
 offset_bottom = -12.0
 theme_override_constants/separation = 8
+tooltip_text = "当前装备的法术（随升级获得与强化）"
+
+[node name="WeaponSlotsLabel" type="Label" parent="."]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 14.0
+offset_top = -90.0
+offset_right = 120.0
+offset_bottom = -72.0
+theme_override_colors/font_color = Color(0.62, 0.58, 0.78, 0.85)
+theme_override_font_sizes/font_size = 13
+text = "法术槽位"
 
 [node name="Slot0" type="Panel" parent="WeaponSlots"]
 custom_minimum_size = Vector2(48, 48)
@@ -319,3 +346,23 @@ theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 10
 text = ""
 horizontal_alignment = 2
+
+[node name="StatsPanel" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -330.0
+offset_top = 60.0
+offset_right = -14.0
+offset_bottom = 60.0
+grow_horizontal = 0
+theme_override_styles/panel = SubResource("stats_panel_sb")
+tooltip_text = "按 C 键开关属性面板"
+
+[node name="StatsText" type="RichTextLabel" parent="StatsPanel"]
+layout_mode = 2
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+mouse_filter = 2

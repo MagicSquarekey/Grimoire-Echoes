@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3]
+[gd_scene load_steps=20 format=3]
 
 [ext_resource type="Script" path="res://scripts/systems/game_controller.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/systems/combat_manager.gd" id="2"]
@@ -17,6 +17,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/boss_health_bar.tscn" id="15"]
 [ext_resource type="PackedScene" path="res://scenes/ui/shop.tscn" id="16"]
 [ext_resource type="PackedScene" path="res://scenes/ui/settings_menu.tscn" id="17"]
+[ext_resource type="Shader" path="res://assets/fx/grade_overlay.gdshader" id="18"]
 
 [sub_resource type="Environment" id="Env_glow"]
 background_mode = 0
@@ -27,11 +28,17 @@ glow_bloom = 0.08
 glow_blend_mode = 2
 glow_hdr_threshold = 0.85
 
+[sub_resource type="ShaderMaterial" id="grade_mat"]
+shader = ExtResource("18")
+
 [node name="Game" type="Node2D"]
 y_sort_enabled = true
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Env_glow")
+
+[node name="CanvasDim" type="CanvasModulate" parent="."]
+color = Color(0.87, 0.87, 0.97, 1)
 
 [node name="Background" type="Node2D" parent="."]
 z_index = -10
@@ -93,3 +100,15 @@ process_mode = 3
 
 [node name="SettingsMenu" parent="." instance=ExtResource("17")]
 process_mode = 3
+
+[node name="GradeOverlay" type="CanvasLayer" parent="."]
+layer = 15
+
+[node name="GradeRect" type="ColorRect" parent="GradeOverlay"]
+material = SubResource("grade_mat")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

@@ -28,6 +28,13 @@ scale_amp = 0.12
 alpha_min = 0.3
 alpha_max = 0.55
 
+[node name="ChestLight" type="PointLight2D" parent="."]
+position = Vector2(0, 2)
+color = Color(1, 0.82, 0.35, 1)
+energy = 0.8
+texture = ExtResource("2")
+texture_scale = 1.35
+
 [node name="FxSparkle" type="Sprite2D" parent="."]
 modulate = Color(1, 0.95, 0.6, 0.8)
 scale = Vector2(0.5, 0.5)
