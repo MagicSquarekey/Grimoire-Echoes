@@ -1,3 +1,17 @@
+# 安全门禁
 .mimosa/
+
+# Godot 编辑器缓存
 game/.godot/imported/
+game/.godot/*.tmp
+
+# 构建产物（发布版走 GitHub Releases）
+game/build/
+build/
+
+# 临时截图与工具输出
 temp_shots/
+
+# 系统文件
+Thumbs.db
+.DS_Store
