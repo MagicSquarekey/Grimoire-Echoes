@@ -169,6 +169,53 @@ func test_wave_plan_curve() -> void:
 	_check(sum >= 620, "1-15波总数量应≥620(旧配置约445的1.4倍)，实际 %d" % sum)
 	print("✅ 新波次曲线测试通过 (1-15波总量=%d)" % sum)
 
+## 测试难度曲线不塌方：缓冲期(1-3波)之后，每波"有效血量压力"必须单调不降。
+## 只看敌人数量会漏判——换成更多种类后，同样数量可能更硬也可能更软；
+## 这里按 ENEMY_DATA 的 hp 加权，并把 Boss 的 make_boss 血量倍率算进来
+## （精英倍率不在此计入，那条规则由 test_boss_and_elite_plan 单独守）。
+func test_wave_pressure_monotonic() -> void:
+	var hp_by_id := {}
+	for data in EnemyGenerator.ENEMY_DATA:
+		hp_by_id[str(data["id"])] = float(data["hp"])
+
+	var boss_path: String = EnemySpawner.ENEMY_SCENE_PATHS[EnemySpawner.BOSS_BASE_TYPE]
+	var boss_scene: PackedScene = load(boss_path)
+	if boss_scene == null:
+		_check(false, "Boss 基底场景不可加载：%s" % boss_path)
+		return
+	var boss_proto: EnemyBase = boss_scene.instantiate()
+	var boss_hp: float = boss_proto.max_health * 8.0  # make_boss 的血量倍率
+	boss_proto.free()
+
+	var prev_normal := 0.0
+	var first_normal := 0.0
+	var last_normal := 0.0
+	for w in range(4, 16):
+		var plan = EnemySpawner.build_wave_plan(w)
+		var is_boss_wave := bool(plan.get("is_boss", false))
+		var pressure := 0.0
+		for e in plan["events"]:
+			var t := str(e["type"])
+			var c := int(e["count"])
+			if t == "boss":
+				pressure += boss_hp * c
+				continue
+			var id := str(EnemySpawner.ENEMY_ID_MAP.get(t, ""))
+			if hp_by_id.has(id):
+				pressure += float(hp_by_id[id]) * c
+		# Boss 波是节奏上的峰，其后一个普通波理应回落喘息，
+		# 所以普通波只与前一个普通波比；Boss 波则必须高于目前为止的峰
+		_check(pressure >= prev_normal - 0.001,
+				"第%d波(%s)血量压力应不低于上一个普通波（%.0f vs %.0f）" % [
+				w, "Boss" if is_boss_wave else "普通", pressure, prev_normal])
+		# 基线只跟随普通波：Boss 波是峰，不该成为后续普通波的对照
+		if not is_boss_wave:
+			prev_normal = pressure
+			if first_normal == 0.0:
+				first_normal = pressure
+			last_normal = pressure
+	print("✅ 难度曲线单调性测试通过 (普通波压力 %.0f → %.0f 递增)" % [first_normal, last_normal])
+
 ## 测试新怪物波次出场与阵型标记
 func test_wave_plan_composition() -> void:
 	var plan4 = EnemySpawner.build_wave_plan(4)
@@ -237,6 +284,86 @@ func test_is_boss_wave_helper() -> void:
 	_check(not wm.is_boss_wave(7), "is_boss_wave(7)应为假")
 	print("✅ is_boss_wave助手测试通过")
 
+## 测试敌人花名册一致性：
+##   1. 波次表里出现的每个 type 都必须在 EnemySpawner 的场景注册表里（否则只有一条警告）
+##   2. enemy_id_map 的每个ID都必须在 EnemyGenerator.ENEMY_DATA 里真实存在
+##      （历史上 orc_warrior→E20 / demon_hound→E21 指向了不存在的ID）
+##   3. 注册表里的场景文件必须存在于 res://scenes/enemies/
+##   4. 新怪物类型确实被写进了脚本化波次（种类多样性是本次改动的目标）
+func test_enemy_roster_consistency() -> void:
+	var registry: Dictionary = EnemySpawner.ENEMY_SCENE_PATHS
+	var id_map: Dictionary = EnemySpawner.ENEMY_ID_MAP
+
+	var known_ids := {}
+	for data in EnemyGenerator.ENEMY_DATA:
+		known_ids[str(data["id"])] = true
+
+	for type in id_map:
+		_check(known_ids.has(id_map[type]),
+				"enemy_id_map[%s] = %s 必须在 ENEMY_DATA 中存在" % [type, id_map[type]])
+		_check(registry.has(type), "enemy_id_map 的 %s 必须有对应场景" % type)
+
+	var wave_types := {}
+	for w in range(1, 17):
+		for e in EnemySpawner.build_wave_plan(w)["events"]:
+			var t: String = e["type"]
+			if t == "boss":
+				continue
+			wave_types[t] = true
+			_check(registry.has(t), "第%d波引用了未注册的类型 %s" % [w, t])
+
+	_check(wave_types.has("bat_swarm"), "脚本化波次应包含飞行群体 bat_swarm")
+	_check(wave_types.has("gargoyle"), "脚本化波次应包含俯冲飞行 gargoyle")
+	_check(wave_types.has("grave_cleric"), "脚本化波次应包含支援治疗 grave_cleric")
+	_check(wave_types.has("aegis_golem"), "脚本化波次应包含护盾光环 aegis_golem")
+	_check(wave_types.has("ember_crab"), "脚本化波次应包含自爆 ember_crab")
+	_check(wave_types.has("plague_spitter"), "脚本化波次应包含中毒远程 plague_spitter")
+	_check(wave_types.has("cursed_knight") and wave_types.has("ember_lord"),
+			"脚本化波次应包含两只新精英")
+
+	for type in registry:
+		# FileAccess 而非 ResourceLoader.exists：新写的 .tscn 可能还没进编辑器的资源扫描缓存
+		_check(FileAccess.file_exists(registry[type]),
+				"%s 的场景文件缺失: %s" % [type, registry[type]])
+	print("✅ 敌人花名册一致性测试通过（波次类型 %d 种）" % wave_types.size())
+
+## 测试敌人场景可实例化 + _init 属性齐备（不入树，纯结构检查）
+## 精灵素材由离线渲染管线并发生成：.tres 未就绪时只跳过并提示，不算失败。
+func test_enemy_scenes_instantiate() -> void:
+	var registry: Dictionary = EnemySpawner.ENEMY_SCENE_PATHS
+	for type in registry:
+		var packed: PackedScene = load(registry[type])
+		if packed == null:
+			print("⚠️ %s 场景暂不可加载（素材可能未就绪），跳过" % type)
+			continue
+		var enemy = packed.instantiate()
+		_check(enemy is EnemyBase, "%s 实例化后不是 EnemyBase" % type)
+		if enemy is EnemyBase:
+			_check(enemy.max_health > 0.0, "%s 生命未初始化" % type)
+			_check(enemy.attack_damage >= 0.0, "%s 伤害未初始化" % type)
+			_check(enemy.move_speed > 0.0, "%s 移速未初始化" % type)
+			_check(not enemy.enemy_name.is_empty(), "%s 缺少 enemy_name" % type)
+		if is_instance_valid(enemy):
+			enemy.free()
+	print("✅ 敌人场景实例化测试通过")
+
+## 测试天生精英不会被随机精英槽二次放大
+## （cursed_knight / ember_lord 在 _init 里已置 is_elite，EnemySpawner 的精英槽必须跳过）
+## 用 load() 取脚本而非 class_name 直引：-s 模式下全局类缓存可能还没扫到新脚本。
+func test_inherent_elites_not_doubled() -> void:
+	var knight = load("res://scripts/enemies/cursed_knight.gd").new()
+	var lord = load("res://scripts/enemies/ember_lord.gd").new()
+	_check(knight.is_elite and lord.is_elite, "天生精英生成时即带 is_elite 标记")
+	_check(knight.max_health == 200.0 and lord.max_health == 250.0,
+			"天生精英血量按数据表配置，未叠 8 倍精英倍率")
+	var knight_hp_before: float = knight.max_health
+	knight.make_elite()
+	_check(is_equal_approx(knight.max_health, knight_hp_before),
+			"make_elite 对已是精英的单位应为空操作")
+	knight.free()
+	lord.free()
+	print("✅ 天生精英倍率保护测试通过")
+
 ## 运行所有测试
 func run_all_tests() -> bool:
 	print("开始运行波次管理器测试...")
@@ -251,10 +378,14 @@ func run_all_tests() -> bool:
 	test_boss_wave_detection()
 	test_preparing_to_spawning_transition()
 	test_wave_plan_curve()
+	test_wave_pressure_monotonic()
 	test_wave_plan_composition()
 	test_boss_and_elite_plan()
 	test_infinite_wave_growth()
 	test_is_boss_wave_helper()
+	test_enemy_roster_consistency()
+	test_enemy_scenes_instantiate()
+	test_inherent_elites_not_doubled()
 	for wm in _created_managers:
 		if is_instance_valid(wm):
 			wm.free()

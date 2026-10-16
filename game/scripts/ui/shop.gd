@@ -53,7 +53,7 @@ func _generate_shop_items() -> void:
 
 		item_list.add_child(button)
 
-## 获取随机物品
+## 获取随机商品（可重复购买：同名价格递增 1.25^n，永不枯竭）
 func _get_random_items(count: int) -> Array[Dictionary]:
 	var all_items = [
 		{"id": "damage_boost", "name": "伤害提升+10%", "price": 50, "type": "stat", "value": 0.1},
@@ -62,13 +62,17 @@ func _get_random_items(count: int) -> Array[Dictionary]:
 		{"id": "crit_boost", "name": "暴击率+10%", "price": 60, "type": "stat", "value": 0.1},
 		{"id": "life_steal", "name": "生命偷取+5%", "price": 80, "type": "stat", "value": 0.05},
 		{"id": "cooldown_reduction", "name": "冷却减少+10%", "price": 55, "type": "stat", "value": 0.1},
+		{"id": "crit_damage", "name": "暴击伤害+25%", "price": 65, "type": "stat", "value": 0.25},
+		{"id": "max_health_flat", "name": "生命上限+30", "price": 35, "type": "stat_flat", "value": 30},
+		{"id": "magnet_range", "name": "拾取范围+40", "price": 30, "type": "stat_flat", "value": 40},
+		{"id": "defense_boost", "name": "护甲+8%", "price": 60, "type": "stat", "value": 0.08},
+		{"id": "attack_power", "name": "攻击力+12%", "price": 70, "type": "stat", "value": 0.12},
+		{"id": "element_power", "name": "元素伤害+15%", "price": 75, "type": "stat", "value": 0.15},
 	]
-	
-	# 随机选择（注意：slice() 返回非类型化 Array，直接赋值给 Array[Dictionary]
-	# 会报错并中断商品生成，这里显式重建类型化数组）
-	var available: Array = all_items.filter(func(item): return item["id"] not in purchased_items)
-	available.shuffle()
-	var picked: Array = available.slice(0, mini(count, available.size()))
+	# 每次随机抽 3 件（允许重复出现，购买价格递增形成金币回收曲线）
+	var pool := all_items.duplicate(true)
+	pool.shuffle()
+	var picked: Array = pool.slice(0, mini(count, pool.size()))
 	var result: Array[Dictionary] = []
 	for item in picked:
 		result.append(item)
@@ -112,11 +116,11 @@ func _apply_item_effect(item: Dictionary) -> void:
 	var player = get_tree().get_first_node_in_group("player")
 	if not player:
 		return
-	
+
 	var stats = player.get_node_or_null("PlayerStats")
 	if not stats:
 		return
-	
+
 	match item["id"]:
 		"damage_boost":
 			stats.attack_damage_bonus += item["value"]
@@ -131,6 +135,19 @@ func _apply_item_effect(item: Dictionary) -> void:
 			stats.life_steal += item["value"]
 		"cooldown_reduction":
 			stats.cooldown_reduction += item["value"]
+		"crit_damage":
+			stats.crit_damage_bonus += item["value"]
+		"max_health_flat":
+			stats.max_health += item["value"]
+			stats.current_health = mini(stats.current_health + item["value"], stats.max_health)
+		"magnet_range":
+			stats.magnet_bonus += item["value"]
+		"defense_boost":
+			stats.defense_bonus += item["value"]
+		"attack_power":
+			stats.attack_bonus += item["value"]
+		"element_power":
+			stats.element_damage_bonus += item["value"]
 
 ## 关闭商店（按钮 / 游戏内 ESC 共用）：恢复游戏并通知波次管理器开下一波
 func close_shop() -> void:

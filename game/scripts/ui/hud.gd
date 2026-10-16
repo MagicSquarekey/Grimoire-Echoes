@@ -19,6 +19,11 @@ extends CanvasLayer
 ## 武器槽UI（左下 4 槽：图标 + 等级角标）
 @onready var weapon_slots: HBoxContainer = $WeaponSlots
 
+## 属性面板（右上，C 键开关）
+@onready var stats_panel: PanelContainer = $StatsPanel
+@onready var stats_text: RichTextLabel = $StatsPanel/StatsText
+var _stats_refresh_timer := 0.0
+
 var _weapon_slots_bound := false
 
 ## 初始化
@@ -47,6 +52,25 @@ func _process(_delta: float) -> void:
 	var minutes = int(time) / 60
 	var seconds = int(time) % 60
 	time_label.text = "%02d:%02d" % [minutes, seconds]
+
+	# 属性面板可见时每 0.5s 刷新
+	if stats_panel.visible:
+		_stats_refresh_timer -= _delta
+		if _stats_refresh_timer <= 0.0:
+			_stats_refresh_timer = 0.5
+			_refresh_stats_panel()
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("stats_panel"):
+		stats_panel.visible = not stats_panel.visible
+		if stats_panel.visible:
+			_refresh_stats_panel()
+
+## 刷新右上角属性面板
+func _refresh_stats_panel() -> void:
+	var player = get_tree().get_first_node_in_group("player")
+	if stats_text:
+		stats_text.text = StatsText.build(player)
 
 ## 更新血量显示
 func update_health(current: float, max_value: float) -> void:
@@ -166,8 +190,13 @@ func _refresh_weapon_slots() -> void:
 			icon.visible = true
 			slot_ui.modulate = Color.WHITE
 			level_label.text = "Lv.%d" % spell.spell_level
+			# 悬停说明：法术名 + 等级 + 攻击方式
+			var info: Dictionary = SpellRegistry.SPELLS.get(sid, {})
+			var atk := str(info.get("attack", ""))
+			slot_ui.tooltip_text = "%s Lv.%d\n%s" % [spell.spell_name, spell.spell_level, atk]
 		else:
 			icon.texture = null
 			icon.visible = false
 			slot_ui.modulate = Color(1, 1, 1, 0.35)  # 空槽半透明
 			level_label.text = ""
+			slot_ui.tooltip_text = "空槽位：升级时有概率获得新法术"

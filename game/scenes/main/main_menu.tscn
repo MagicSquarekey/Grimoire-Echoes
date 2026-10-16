@@ -213,5 +213,5 @@ offset_bottom = -28.0
 grow_horizontal = 0
 grow_vertical = 0
 theme_type_variation = &"HintLabel"
-text = "秘法回响 v0.1 · Arcane Echoes"
+text = "秘法回响 v0.0.1 · Arcane Echoes"
 horizontal_alignment = 2

@@ -12,8 +12,8 @@ func _ready() -> void:
 	_build_stage()
 	var tests := [
 		{"path": "res://assets/models/creep_creature.glb", "anim": "Idle1_Action"},
-		{"path": "res://assets/models/blue_demon.gltf", "anim": "Idle"},
-		{"path": "res://assets/models/blue_demon.gltf", "anim": "Run"},
+		{"path": "res://assets/models/orc.gltf", "anim": "Idle"},
+		{"path": "res://assets/models/orc.gltf", "anim": "Run"},
 	]
 	for t in tests:
 		var model_path: String = t["path"]

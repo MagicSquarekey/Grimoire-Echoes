@@ -84,14 +84,14 @@ const SNAP := 32.0
 ## 各层网格尺寸（世界 px）：patch 大尺度明暗 / blob 中尺度色斑 / decor 小装饰
 const CELL_PATCH := 520.0
 const CELL_BLOB := 240.0
-const CELL_DECOR := 120.0
+const CELL_DECOR := 92.0
 ## 地标级装饰网格（世界 px）：间隔大、醒目但低饱和
 const CELL_LANDMARK := 1150.0
 ## 极淡网格间距（替代原先明显的定位网格）
 const GRID_SPACING := 160.0
 ## 地面细纹平铺周期（世界 px）与纹理边长（纹理像素）
 const GRAIN_TILE := 512.0
-const GRAIN_TEX := 128
+const GRAIN_TEX := 256
 ## 出生点（与 player.gd 固定出生位置一致），用于出生魔法阵装饰
 const SPAWN_POS := Vector2(960, 540)
 
@@ -222,7 +222,7 @@ func _u32(v: int) -> int:
 
 func _make_grain_texture() -> ImageTexture:
 	_lattices.clear()
-	var octaves := [[3, 0.42], [6, 0.28], [12, 0.18], [24, 0.12]]
+	var octaves := [[3, 0.40], [6, 0.26], [12, 0.17], [24, 0.11], [48, 0.06]]
 	for oc in octaves:
 		var p: int = oc[0]
 		var lat := PackedFloat32Array()
@@ -411,7 +411,11 @@ func _draw_decor(wr: Rect2) -> void:
 			var origin := Vector2(float(cx), float(cy)) * CELL_DECOR
 			var p := origin + Vector2(_ch(cx, cy, 301), _ch(cx, cy, 302)) * CELL_DECOR
 			var s := lerpf(2.0, 5.5, _ch(cx, cy, 303))
-			_draw_decor_item(_pick_decor_kind(_ch(cx, cy, 304)), p, s, cx, cy, 0)
+			var kind := _pick_decor_kind(_ch(cx, cy, 304))
+			# 光点有概率升级为发光水晶簇（精细化装饰）
+			if kind == 3 and _ch(cx, cy, 330) > 0.74:
+				kind = 5
+			_draw_decor_item(kind, p, s, cx, cy, 0)
 			if _ch(cx, cy, 305) > 0.72:
 				var p2 := origin + Vector2(_ch(cx, cy, 306), _ch(cx, cy, 307)) * CELL_DECOR
 				var s2 := lerpf(2.0, 5.0, _ch(cx, cy, 309))
@@ -470,6 +474,39 @@ func _draw_decor_item(kind: int, p: Vector2, s: float, cx: int, cy: int, salt_of
 			])
 			draw_colored_polygon(pts, Color(glow.r, glow.g, glow.b, glow.a * 0.4))
 			draw_circle(rp, r2 * 0.32, glow)
+		5:  # 发光水晶簇：主晶 + 两枚副晶 + 地面光晕
+			var u := _w(p)
+			var base_col := Color(glow.r, glow.g, glow.b, glow.a * 0.9)
+			var core_col := Color(1.0, 1.0, 1.0, glow.a * 0.85)
+			# 地面光晕
+			draw_circle(u, s * 3.2, Color(glow.r, glow.g, glow.b, glow.a * 0.14))
+			# 主晶（竖长菱形）
+			var h := s * 3.4
+			var wq := s * 1.05
+			var main_pts := PackedVector2Array([
+				u + Vector2(0, -h), u + Vector2(wq, -h * 0.25),
+				u + Vector2(wq * 0.7, h * 0.35), u + Vector2(0, h * 0.6),
+				u + Vector2(-wq * 0.7, h * 0.35), u + Vector2(-wq, -h * 0.25),
+			])
+			draw_colored_polygon(main_pts, base_col)
+			# 主晶亮芯
+			var core_pts := PackedVector2Array([
+				u + Vector2(0, -h * 0.72), u + Vector2(wq * 0.42, -h * 0.1),
+				u + Vector2(0, h * 0.28), u + Vector2(-wq * 0.42, -h * 0.1),
+			])
+			draw_colored_polygon(core_pts, core_col)
+			# 副晶两枚（左右倾斜）
+			for side in [-1.0, 1.0]:
+				var sh := s * 1.7
+				var sw := s * 0.6
+				var sp := u + Vector2(side * s * 2.1, s * 0.9)
+				var side_pts := PackedVector2Array([
+					sp + Vector2(0, -sh), sp + Vector2(side * sw, -sh * 0.2),
+					sp + Vector2(side * sw * 0.6, sh * 0.4), sp + Vector2(-side * sw * 0.2, sh * 0.35),
+				])
+				draw_colored_polygon(side_pts, Color(base_col.r, base_col.g, base_col.b, base_col.a * 0.75))
+			# 晶尖闪光
+			draw_circle(u + Vector2(0, -h - 1.5), s * 0.42, Color(1, 1, 1, glow.a * 0.7))
 
 
 ## 地标级装饰：每个大 cell 概率出现一个，随主题变化；间隔大、醒目但低饱和

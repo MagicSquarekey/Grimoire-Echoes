@@ -9,6 +9,7 @@ extends CanvasLayer
 @onready var save_button: Button = $Root/Panel/MarginContainer/VBoxContainer/SaveButton
 @onready var settings_button: Button = $Root/Panel/MarginContainer/VBoxContainer/SettingsButton
 @onready var quit_button: Button = $Root/Panel/MarginContainer/VBoxContainer/QuitButton
+@onready var stats_label: RichTextLabel = $Root/Panel/MarginContainer/VBoxContainer/StatsLabel
 
 ## 初始化
 func _ready() -> void:
@@ -27,8 +28,16 @@ func show_menu() -> void:
 	var player = get_tree().get_first_node_in_group("player")
 	if player and player.get("is_choosing_upgrade"):
 		return
+	_refresh_stats()
 	visible = true
 	get_tree().paused = true
+
+## 刷新属性面板
+func _refresh_stats() -> void:
+	if stats_label == null:
+		return
+	var player = get_tree().get_first_node_in_group("player")
+	stats_label.text = StatsText.build(player)
 
 ## 隐藏暂停菜单
 func hide_menu() -> void:

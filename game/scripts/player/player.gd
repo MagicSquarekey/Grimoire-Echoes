@@ -131,6 +131,9 @@ func _apply_character_bonus(character_id: String) -> void:
 	var aura := get_node_or_null("AuraGlow")
 	if aura:
 		aura.modulate = aura_col
+	var light := get_node_or_null("ElementLight")
+	if light:
+		light.color = Color(aura_col.r, aura_col.g, aura_col.b, 1.0)
 
 func take_damage(damage: float, attacker = null) -> void:
 	if is_invincible:
@@ -198,6 +201,51 @@ func _show_upgrade_panel() -> void:
 func _opt_key(opt: Dictionary) -> String:
 	return "%s|%s|%s" % [opt.get("id", ""), opt.get("spell_id", ""), opt.get("boost", "")]
 
+## ---- 品阶系统：普通/稀有/史诗/传说，倍率放大强化数值，概率随波次提升 ----
+const TIER_NAMES := ["普通", "稀有", "史诗", "传说"]
+const TIER_MULT := [1.0, 1.6, 2.4, 3.5]
+
+func _roll_tier() -> int:
+	var wave: int = WaveManager.current_wave
+	var luck := clampf(wave / 30.0, 0.0, 1.0)  # 30 波后高品阶概率达到上限
+	var weights: Array[float] = [
+		lerpf(62.0, 28.0, luck),
+		lerpf(26.0, 38.0, luck),
+		lerpf(9.0, 23.0, luck),
+		lerpf(3.0, 11.0, luck),
+	]
+	var roll: float = randf() * (weights[0] + weights[1] + weights[2] + weights[3])
+	for i in weights.size():
+		if roll < weights[i]:
+			return i
+		roll -= weights[i]
+	return 0
+
+## 按品阶回填名称/描述/等级显示（数值倍率同时写入，_apply_upgrade 读取 tier 再放大）
+func _apply_tier(opt: Dictionary) -> Dictionary:
+	var tier := _roll_tier()
+	opt["tier"] = tier
+	var m: float = TIER_MULT[tier]
+	match opt.get("id", ""):
+		"damage":
+			opt["desc"] = "所有法术伤害 +%d%%" % roundi(20.0 * m)
+		"haste":
+			opt["desc"] = "法术冷却时间 -%d%%" % roundi(15.0 * m)
+		"multishot":
+			opt["multishot_count"] = 1 + int(m)
+			opt["desc"] = "奥术飞弹数量 +%d" % (1 + int(m))
+		"speed":
+			opt["desc"] = "移动速度 +%d%%" % roundi(12.0 * m)
+		"health":
+			opt["health_gain"] = roundi(25.0 * m)
+			opt["desc"] = "生命上限 +%d，并回复 50%% 生命" % opt["health_gain"]
+		"magnet":
+			opt["desc"] = "拾取范围 +%d" % roundi(50.0 * m)
+		"spell_power":
+			var verb := "伤害 +%d%%" % roundi(25.0 * m) if opt.get("boost", "") == "damage" else "冷却时间 -%d%%" % roundi(20.0 * m)
+			opt["desc"] = "%s (Lv.%d) %s" % [opt.get("spell_name", ""), opt.get("spell_level", 1), verb]
+	return opt
+
 ## 生成强化选项池（抽3个，不重复）
 ## 构成：数值升级（6）+ 法术强化（对已装备法术实例，最多2条）+ 获得新法术（有空槽时，权重更高）
 func _generate_options(count: int) -> Array:
@@ -225,11 +273,11 @@ func _generate_options(count: int) -> Array:
 		var spell = equipped[randi() % equipped.size()]
 		var boost: String = boosts[randi() % boosts.size()]
 		var sid := str(spell.get_meta("spell_id", spell.spell_name))
-		var desc := "伤害 +25%" if boost == "damage" else "冷却时间 -20%"
 		candidates.append({
 			"id": "spell_power", "spell_id": sid, "boost": boost,
+			"spell_name": spell.spell_name, "spell_level": spell.spell_level,
 			"name": "法术强化·%s" % spell.spell_name,
-			"desc": "%s %s" % [spell.spell_name, desc], "level": 1,
+			"desc": "", "level": 1,
 		})
 
 	# 3) 获得新法术：仅当有空槽时；剔除已有；重复入池一次 → 优先级略高
@@ -254,46 +302,49 @@ func _generate_options(count: int) -> Array:
 				candidates.append(opt)
 				candidates.append(opt.duplicate(true))
 
-	# 加权不放回抽取（重复候选 = 更高权重）
+	# 加权不放回抽取（重复候选 = 更高权重），抽中即滚品阶并回填数值文案
 	var picked: Array = []
 	while picked.size() < count and not candidates.is_empty():
 		var opt: Dictionary = candidates[randi() % candidates.size()]
+		_apply_tier(opt)
 		picked.append(opt)
 		var key := _opt_key(opt)
 		candidates = candidates.filter(func(o): return _opt_key(o) != key)
 	return picked
 
-## 应用强化
+## 应用强化（品阶倍率已在选项生成时写入文案，此处按 tier 放大实际效果）
 func _apply_upgrade(option) -> void:
+	var m: float = TIER_MULT[int(option.get("tier", 0))]
 	match option.get("id", ""):
 		"damage":
 			for spell in spell_caster.spell_slots:
 				if spell:
-					spell.damage *= 1.2
+					spell.damage *= 1.0 + 0.2 * m
 		"haste":
 			for spell in spell_caster.spell_slots:
 				if spell:
-					spell.cooldown = max(0.15, spell.cooldown * 0.85)
+					spell.cooldown = max(0.15, spell.cooldown * (1.0 - 0.15 * m))
 		"multishot":
 			for spell in spell_caster.spell_slots:
 				if spell and "projectile_count" in spell:
-					spell.projectile_count += 1
+					spell.projectile_count += int(option.get("multishot_count", 1))
 		"speed":
-			stats.move_speed_bonus += 0.12
+			stats.move_speed_bonus += 0.12 * m
 		"health":
-			stats.max_health += 25.0
+			var gain := float(option.get("health_gain", 25))
+			stats.max_health += gain
 			stats.heal(stats.get_max_health() * 0.5)
 		"magnet":
-			stats.magnet_bonus += 50.0
+			stats.magnet_bonus += 50.0 * m
 		"spell_power":
 			# 对指定法术实例强化（不是全局 damage）
 			var sid := str(option.get("spell_id", ""))
 			for spell in spell_caster.spell_slots:
 				if spell and str(spell.get_meta("spell_id", "")) == sid:
-					if option.get("boost", "damage") == "cooldown":
-						spell.cooldown = max(0.15, spell.cooldown * 0.8)
+					if option.get("boost", "") == "cooldown":
+						spell.cooldown = max(0.15, spell.cooldown * (1.0 - 0.20 * m))
 					else:
-						spell.damage *= 1.25
+						spell.damage *= 1.0 + 0.25 * m
 					break
 		"new_spell":
 			_equip_new_spell(option.get("spell_id", ""))

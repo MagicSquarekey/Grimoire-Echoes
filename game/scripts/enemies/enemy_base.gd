@@ -21,6 +21,10 @@ var target = null
 var is_elite = false
 var is_boss = false
 
+# 吸收盾（由 aegis_golem 光环赋予，见 apply_shield）：优先于生命承受伤害
+var shield_hp := 0.0
+var _shield_ring: Sprite2D
+
 # Boss 技能状态（冲锋 + 召唤）
 var _boss_charge_timer = 6.0      # 冲锋技能倒计时
 var _boss_summon_timer = 14.0     # 召唤技能倒计时（召唤频率压低，避免无限小怪吸干输出）
@@ -52,6 +56,7 @@ const GEM_SCENE = preload("res://scenes/pickups/experience_gem.tscn")
 const COIN_SCENE = preload("res://scenes/pickups/gold_coin.tscn")
 const POTION_SCENE = preload("res://scenes/pickups/health_potion.tscn")
 const MAGNET_SCENE = preload("res://scenes/pickups/magnet_pickup.tscn")
+const ENEMY_PROJECTILE_SCENE = preload("res://scenes/enemies/enemy_projectile.tscn")
 
 func _ready() -> void:
 	current_health = max_health
@@ -63,10 +68,16 @@ func _physics_process(delta: float) -> void:
 		return
 	_process_ai(delta)
 
-## 受到伤害
+## 受到伤害：护盾先吸收溢出部分才计入生命（破盾当帧仍给受击反馈，玩家可读）
 func take_damage(damage: float, attacker = null) -> void:
 	if not is_alive:
 		return
+	
+	var absorbed := minf(shield_hp, damage)
+	if absorbed > 0.0:
+		shield_hp -= absorbed
+		damage -= absorbed
+		_refresh_shield_visual()
 	
 	current_health -= damage
 	enemy_hit.emit(attacker, damage)
@@ -75,6 +86,19 @@ func take_damage(damage: float, attacker = null) -> void:
 	
 	if current_health <= 0:
 		_die()
+
+## 治疗（grave_cleric 光环来源）：不超过生命上限，死人不救
+func heal(amount: float) -> void:
+	if not is_alive or amount <= 0.0:
+		return
+	current_health = minf(max_health, current_health + amount)
+
+## 赋予吸收盾（aegis_golem 光环来源）：可叠加，由施加方控制上限
+func apply_shield(amount: float) -> void:
+	if not is_alive or amount <= 0.0:
+		return
+	shield_hp += amount
+	_refresh_shield_visual()
 
 ## 应用状态效果
 func apply_status_effect(effect_type, value, duration) -> void:
@@ -91,6 +115,8 @@ func _die() -> void:
 		return
 	is_alive = false
 	current_ai_state = AIState.DEAD
+	shield_hp = 0.0
+	_refresh_shield_visual()
 	
 	collision_shape.set_deferred("disabled", true)
 	hitbox.set_deferred("monitoring", false)
@@ -166,8 +192,10 @@ func _process_ai(delta: float) -> void:
 const RING_TEXTURE = preload("res://assets/fx/ring_glow.png")
 
 ## 精英：血量×8、伤害×1.5、金色外观 + 1.25x 缩放 + 脚下金环；必掉金币堆+大量经验
+## 已是精英（含 cursed_knight / ember_lord 这类天生精英）直接跳过，
+## 否则随机精英槽抽中它们会把 200/250 血再乘 8 变成打不动的血牛
 func make_elite() -> void:
-	if is_boss:
+	if is_boss or is_elite:
 		return
 	is_elite = true
 	max_health *= 8.0
@@ -194,13 +222,35 @@ func make_boss(scale_mult: float = 2.2) -> void:
 	_apply_body_scale_mult(scale_mult)
 	_add_ground_ring(Color(0.9, 0.2, 0.15, 0.9), 1.6)
 	add_to_group("boss")
+	# Boss 专属红光（动态 2D 光照，照亮周围地面）
+	var boss_light := PointLight2D.new()
+	boss_light.color = Color(1.0, 0.32, 0.22)
+	boss_light.energy = 0.85
+	boss_light.texture = preload("res://assets/fx/glow_soft.png")
+	boss_light.texture_scale = 3.2
+	boss_light.position = Vector2(0, 4)
+	add_child.call_deferred(boss_light)
 	# 此时尚未入树，延迟广播（Boss 血条监听该信号显示）
 	EventBus.boss_spawned.emit.call_deferred(enemy_name)
 
+## 天生精英（cursed_knight / ember_lord）：属性表里已按精英数值配置，
+## 只继承精英的外观与掉落，不再叠乘 make_elite 的 8 倍血量
+func mark_inherent_elite() -> void:
+	if is_elite or is_boss:
+		return
+	is_elite = true
+	modulate = Color(1.0, 0.85, 0.25)
+	_add_ground_ring(Color(1.0, 0.8, 0.2, 0.85), 1.45)
+
 ## 缩放视觉身体并等比放大碰撞半径（根节点缩放会干扰物理，故直接改半径）
+var _body_base_scale := Vector2.ZERO  # 受击弹动的固定基准（防连击棘轮式放大）
+
 func _apply_body_scale_mult(mult: float) -> void:
 	if body:
 		body.scale *= mult
+		# 基准同步放大（若受击弹动已捕获过基准）
+		if _body_base_scale != Vector2.ZERO:
+			_body_base_scale = body.scale
 	for shape_holder in [collision_shape, hitbox, hurtbox]:
 		if shape_holder and shape_holder.get_child_count() > 0:
 			var cs = shape_holder.get_child(0)
@@ -221,6 +271,27 @@ func _add_ground_ring(color: Color, ring_scale: float) -> void:
 	mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 	ring.material = mat
 	add_child(ring)
+
+## 护盾指示环：单节点复用（首次持盾才创建），持盾可见/破盾隐藏，零逐帧开销
+func _refresh_shield_visual() -> void:
+	if shield_hp <= 0.0:
+		if _shield_ring:
+			_shield_ring.visible = false
+		return
+	if _shield_ring == null or not is_instance_valid(_shield_ring):
+		_shield_ring = Sprite2D.new()
+		_shield_ring.name = "ShieldRing"
+		_shield_ring.texture = RING_TEXTURE
+		_shield_ring.position = Vector2(0, 11)
+		_shield_ring.z_index = -1
+		_shield_ring.modulate = Color(0.42, 0.72, 1.0, 0.8)
+		var mat = CanvasItemMaterial.new()
+		mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+		_shield_ring.material = mat
+		add_child(_shield_ring)
+	var s := 1.3 if is_elite else 1.05
+	_shield_ring.scale = Vector2(s, s * 0.62)
+	_shield_ring.visible = true
 
 ## ---------- Boss 专属技能：周期冲锋 + 召唤暗影仆从 ----------
 
@@ -288,6 +359,50 @@ func _boss_summ_minions() -> void:
 func get_difficulty_scale() -> float:
 	return 1.0 + float(WaveManager.current_wave) * 0.1
 
+## ---------- 光环/治疗/连锁类敌人的友军查询 ----------
+## 单次物理形状查询（Enemies 层 bodies），供治疗者、护盾光环、雷电中继使用。
+## 只在技能冷却到点时调用一次，绝不进每帧循环：数百敌人同屏时 O(n²) 扫描会掉帧。
+func allies_in_radius(radius: float, max_results: int = 32) -> Array[Node2D]:
+	var result: Array[Node2D] = []
+	var shape := CircleShape2D.new()
+	shape.radius = radius
+	var query := PhysicsShapeQueryParameters2D.new()
+	query.shape = shape
+	query.transform = Transform2D(0, global_position)
+	query.collision_mask = 2  # Enemies 层
+	query.collide_with_bodies = true
+	query.collide_with_areas = false
+	for hit in get_world_2d().direct_space_state.intersect_shape(query, max_results):
+		var node = hit.get("collider")
+		if node is Node2D and node != self and node.is_in_group("enemies"):
+			result.append(node)
+	return result
+
+## 造一枚敌方弹体（bone_archer / plague_spitter 复用）：
+## 按玩家 0.25s 位移预测瞄准，返回**未上树**的弹体节点（EnemyProjectile），
+## 调用方可继续填 plague_stacks 等扩展字段，再自行 add_child.call_deferred 挂载
+## （射击常发生在物理回调里，直接 add_child 会报 flush 期间改状态）。
+## 返回类型故意不写死：enemy_base 不该在解析期依赖新脚本的全局类名。
+func make_projectile(p_damage: float, p_speed: float, p_element: String):
+	if not target or not is_instance_valid(target):
+		return null
+	if get_tree().current_scene == null:
+		return null
+	var proj = ENEMY_PROJECTILE_SCENE.instantiate()
+	if proj == null:
+		return null
+	proj.damage = p_damage
+	proj.speed = p_speed
+	proj.element = p_element
+	proj.caster = self
+	var aim: Vector2 = target.global_position
+	if target is CharacterBody2D:
+		aim += (target as CharacterBody2D).velocity * 0.25
+	proj.direction = (aim - global_position).normalized()
+	# 出膛点前移，避免弹体刚生成就压在发射者身上
+	proj.start_pos = global_position + proj.direction * 14.0
+	return proj
+
 ## 空闲状态
 ## 幸存者类标准：生成即仇恨玩家（出生环带在探测半径 300px 之外，
 ## 若等 DetectionArea 触发，环形合围/狼群包会原地罚站，压力闭环断裂）
@@ -321,15 +436,17 @@ var _flash_tween: Tween
 func _on_hit_effect() -> void:
 	if body:
 		# 受击反馈：白闪（HDR 提亮配合辉光）+ 体积微缩放
+		# 基准缩放只捕获一次（含精英/Boss 倍率），连击不会棘轮式放大
+		if _body_base_scale == Vector2.ZERO:
+			_body_base_scale = body.scale
 		if _flash_tween and _flash_tween.is_valid():
 			_flash_tween.kill()
 		body.modulate = Color(1.9, 1.9, 1.9, 1.0)
-		var base_scale: Vector2 = body.scale
-		body.scale = base_scale * 1.14
+		body.scale = _body_base_scale * 1.14
 		_flash_tween = create_tween()
 		_flash_tween.set_parallel(true)
 		_flash_tween.tween_property(body, "modulate", Color.WHITE, 0.14)
-		_flash_tween.tween_property(body, "scale", base_scale, 0.14)
+		_flash_tween.tween_property(body, "scale", _body_base_scale, 0.14)
 
 ## 死亡动画
 func _on_death_animation() -> void:

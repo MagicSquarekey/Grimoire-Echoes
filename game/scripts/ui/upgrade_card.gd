@@ -30,6 +30,15 @@ const RARITY_COLORS: Array[Color] = [
 	Color(0.91, 0.42, 0.66),
 ]
 
+# [品阶系统] 普通稀有史诗传说：名称与对应色
+const TIER_NAMES := ["普通", "稀有", "史诗", "传说"]
+const TIER_COLORS: Array[Color] = [
+	Color(0.78, 0.76, 0.86),
+	Color(0.36, 0.61, 0.94),
+	Color(0.66, 0.42, 0.96),
+	Color(0.95, 0.76, 0.31),
+]
+
 ## 信号
 signal option_selected()
 
@@ -80,15 +89,25 @@ func _update_display() -> void:
 		var icon_id: String = UPGRADE_ICONS.get(option_data["id"], "star")
 		icon.texture = load(UI_ICON_DIR + icon_id + ".png")
 
-	# [UI美化] 品阶边框配色
+	# [UI美化] 品阶边框配色：有 tier 按品阶着色（边框+品阶名+名称），无 tier 按ID哈希
 	_apply_rarity_border()
 
-## [UI美化] 按选项ID稳定分配品阶边框色
+## [UI美化] 按品阶分配边框与文字色
 func _apply_rarity_border() -> void:
-	var idx := 0
-	if option_data.has("id"):
-		idx = absi(str(option_data["id"]).hash()) % RARITY_COLORS.size()
-	var col: Color = RARITY_COLORS[idx]
+	var col: Color
+	var tier: int = int(option_data.get("tier", -1))
+	if tier >= 0 and tier < TIER_COLORS.size():
+		col = TIER_COLORS[tier]
+		if level_label:
+			level_label.text = TIER_NAMES[tier]
+			level_label.add_theme_color_override("font_color", col.lightened(0.25))
+		if name_label:
+			name_label.add_theme_color_override("font_color", col.lightened(0.35))
+	else:
+		var idx := 0
+		if option_data.has("id"):
+			idx = absi(str(option_data["id"]).hash()) % RARITY_COLORS.size()
+		col = RARITY_COLORS[idx]
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = Color(0.11, 0.09, 0.2, 0.98)
 	sb.set_border_width_all(2)
@@ -101,7 +120,7 @@ func _apply_rarity_border() -> void:
 	sb.shadow_color = Color(col.r, col.g, col.b, 0.25)
 	sb.shadow_size = 8
 	add_theme_stylebox_override("panel", sb)
-	if name_label:
+	if tier < 0 and name_label:
 		name_label.add_theme_color_override("font_color", col.lightened(0.35))
 
 ## 鼠标输入处理
