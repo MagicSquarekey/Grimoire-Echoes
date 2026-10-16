@@ -1,6 +1,6 @@
 # ✨ 그림리어 에코즈 · 秘法回响
 
-> **🔮 언어:** [English](README.en.md) · [简体中文](README.md) · [日本語](README.ja.md) · [한국어](#한국어)
+> **🔮 언어:** [English](README.en.md) · [简体中文](README.md) · [日本語](README.ja.md) · 한국어 · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Русский](README.ru.md) · [Português](README.pt.md) · [Italiano](README.it.md) · [العربية](README.ar.md) · [اردو](README.ur.md) · [हिन्दी](README.hi.md) · [বাংলা](README.bn.md) · [Bahasa Indonesia](README.id.md) · [Tiếng Việt](README.vi.md) · [Türkçe](README.tr.md)
 
 ---
 
@@ -55,4 +55,4 @@ cd Grimoire-Echoes/game
 
 ---
 
-*[English](README.en.md) | [简体中文](README.md) | [日本語](README.ja.md)*
+***🔮 언어:** [English](README.en.md) · [简体中文](README.md) · [日本語](README.ja.md) · 한국어 · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Русский](README.ru.md) · [Português](README.pt.md) · [Italiano](README.it.md) · [العربية](README.ar.md) · [اردو](README.ur.md) · [हिन्दी](README.hi.md) · [বাংলা](README.bn.md) · [Bahasa Indonesia](README.id.md) · [Tiếng Việt](README.vi.md) · [Türkçe](README.tr.md)*

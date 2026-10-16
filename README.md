@@ -1,6 +1,6 @@
 # ✨ 秘法回响 · Grimoire Echoes
 
-> **🔮 语言 / Languages:** [English](README.en.md) · [简体中文](#简体中文) · [日本語](README.ja.md) · [한국어](README.ko.md)
+> **🔮 语言 / Languages:** [English](README.en.md) · 简体中文 · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Русский](README.ru.md) · [Português](README.pt.md) · [Italiano](README.it.md) · [العربية](README.ar.md) · [اردو](README.ur.md) · [हिन्दी](README.hi.md) · [বাংলা](README.bn.md) · [Bahasa Indonesia](README.id.md) · [Tiếng Việt](README.vi.md) · [Türkçe](README.tr.md)
 
 ---
 
@@ -55,4 +55,4 @@ cd Grimoire-Echoes/game
 
 ---
 
-*[English](README.en.md) | [日本語](README.ja.md) | [한국어](README.ko.md)*
+***🔮 语言 / Languages:** [English](README.en.md) · 简体中文 · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Русский](README.ru.md) · [Português](README.pt.md) · [Italiano](README.it.md) · [العربية](README.ar.md) · [اردو](README.ur.md) · [हिन्दी](README.hi.md) · [বাংলা](README.bn.md) · [Bahasa Indonesia](README.id.md) · [Tiếng Việt](README.vi.md) · [Türkçe](README.tr.md)*
